@@ -4,37 +4,46 @@ from pylspm import PyLSpm
 from results import PyLSpmHTML
 from boot import PyLSboot
 import numpy as np
-from scipy.stats import norm
 from numpy import inf
 import pandas as pd
 import copy
+import scipy.stats
 
 
 if __name__ == '__main__':
     freeze_support()
 
-    boot = 2
-    nrboot = 10
-    method = 'bca'
-    data = 'dados2.csv'
+    # Parâmetros
+
+    boot = 3
+    nrboot = 100
     cores = 8
+
+    method = 'percentile'
+    data = 'dados2G.csv'
+    lvmodel = 'lvmodel.csv'
+    mvmodel = 'mvmodel.csv'
     scheme = 'path'
     regression = 'ols'
 
-    data_ = pandas.read_csv(data)
+    # Fim
 
-    if (boot==1):
-        tese = PyLSboot(nrboot, cores, data, 'lvmodel.csv', 'mvmodel.csv', scheme, regression, 0, 100)
+    data_ = pandas.read_csv(data)
+        
+    if (boot==0):
+        tese = PyLSpm(data_, lvmodel, mvmodel, scheme, regression, 0, 100)
+        imprime = PyLSpmHTML(tese)
+        imprime.generate()
+
+    elif (boot==1):
+        tese = PyLSboot(nrboot, cores, data_, lvmodel, mvmodel, scheme, regression, 0, 100)
         resultados = tese.boot()
 
         current = list(filter(None.__ne__, resultados))
         current = np.sort(current, axis=0)
 
-        default = PyLSpm(data, 'lvmodel.csv', 'mvmodel.csv', 0, 100).path_matrix.values
-
         if (method == 'percentile'):
             for i in range(len(current[0])):
-                print(i)
                 current_ = [j[i] for j in current]
                 print('MEAN')
                 print( np.round(np.mean(current_, axis=0),4) )
@@ -46,6 +55,8 @@ if __name__ == '__main__':
                 print ( np.round(np.percentile(current_, 97.5, axis=0),4) )
 
         elif (method == 'bca'):
+
+            default = PyLSpm(data_, lvmodel, mvmodel, scheme, regression, 0, 100).path_matrix.values
             for i in range(len(current[0])):
                 current_ = [j[i] for j in current]
 
@@ -60,7 +71,7 @@ if __name__ == '__main__':
                 zs = z0 + norm.ppf(alphas).reshape(alphas.shape+(1,)*z0.ndim)
 
                 # acceleration and jackknife
-                jstat = PyLSboot(len(data_), cores, data_, 'lvmodel.csv', 'mvmodel.csv', scheme, regression, 0, 100)
+                jstat = PyLSboot(len(data_), cores, data_, lvmodel, mvmodel, scheme, regression, 0, 100)
                 jstat = jstat.jk()
                 jstat = list(filter(None.__ne__, jstat))
                 
@@ -97,49 +108,93 @@ if __name__ == '__main__':
 
         def isNaN(num):
             return num != num
-
-        # Blindfolding
-        data = pd.read_csv('dados3.csv')
-
         # observation/distance must not be interger
         distance = 7
 
-        Q2 = pd.DataFrame(0, index=range(len(data.columns)), columns=range(distance))
-        Q2.index = data.columns.values
-        mean = pd.DataFrame.mean(data)
+        Q2 = pd.DataFrame(0, index=range(len(data_.columns)), columns=range(distance))
+        Q2.index = data_.columns.values
+        mean = pd.DataFrame.mean(data_)
 
         for dist in range(distance):
-            dataBlind = copy.deepcopy(data)
+            dataBlind = copy.deepcopy(data_)
             rodada=1
             count = distance-dist-1
-            for j in range(len(data.columns)):
-                for i in range(len(data)):
+            for j in range(len(data_.columns)):
+                for i in range(len(data_)):
                     count+=1
                     if count==distance:
                         dataBlind.ix[i,j]=np.nan
                         count=0
 
-            for j in range(len(data.columns)):
-                for i in range(len(data)):
+            for j in range(len(data_.columns)):
+                for i in range(len(data_)):
                     if (isNaN(dataBlind.ix[i,j])):
                         dataBlind.ix[i,j] = mean[j]
             
             rodada=rodada+1
 
-            plsRound = PyLSpm(dataBlind, 'lvmodel.csv', 'mvmodel.csv', scheme, regression, 0, 100)
+            plsRound = PyLSpm(dataBlind, lvmodel, mvmodel, scheme, regression, 0, 100)
             predictedRound = plsRound.predict()
 
-            sse = pd.DataFrame.sum((data-predictedRound)**2)
-            sso = pd.DataFrame.sum((data-mean)**2)
+            sse = pd.DataFrame.sum((data_-predictedRound)**2)
+            sso = pd.DataFrame.sum((data_-mean)**2)
             Q2_=1-(sse/sso)
             Q2[dist]=Q2_
         Q2 = pd.DataFrame.mean(Q2, axis=1)
         print(Q2)
-        
-    elif (boot==0):
-        tese = PyLSpm(data, 'lvmodel.csv', 'mvmodel.csv', scheme, regression, 0, 100)
-        imprime = PyLSpmHTML(tese)
-        imprime.generate()
+    
+    elif (boot==3):
 
+        def trataGroups(objeto):
 
+            current = list(filter(None.__ne__, objeto))
+            current = np.sort(current, axis=0)
+
+            for i in range(len(current[0])):
+                current_ = [j[i] for j in current]
+                mean_ = np.round(np.mean(current_, axis=0),4)
+                deviation_ = np.round(np.std(current_, axis=0, ddof=1),4)
+
+            return [mean_, deviation_]
+
+        data1 = (data_.loc[data_['SEM'] == 0]).drop('SEM', axis=1)
+        data2 = (data_.loc[data_['SEM'] == 1]).drop('SEM', axis=1)
+
+        estimData1 = PyLSboot(nrboot, cores, data1, lvmodel, mvmodel, scheme, regression, 0, 100)
+        estimData2 = PyLSboot(nrboot, cores, data2, lvmodel, mvmodel, scheme, regression, 0, 100)
+
+        estimData1 = estimData1.boot()
+        estimData2 = estimData2.boot()
+
+        estimado1 = trataGroups(estimData1)
+        estimado2 = trataGroups(estimData2)
+
+        path_diff = np.abs(estimado1[0] - estimado2[0])
+
+        print(path_diff)
         
+        tStat = pd.DataFrame(0, index=range(len(path_diff)), columns=range(len(path_diff)))
+        pval = pd.DataFrame(0, index=range(len(path_diff)), columns=range(len(path_diff)))
+
+        SE1 = estimado1[1]
+        SE2 = estimado2[1]
+
+        print(SE1)
+        print(SE2)
+        print(estimado1[0])
+        print(estimado2[0])
+
+        ng1 = len(data1)
+        ng2 = len(data2)
+        k1 = ((ng1-1)^2) / (ng1+ng2-2)
+        k2 = ((ng2-1)^2) / (ng1+ng2-2)
+        k3 = np.sqrt(1/ng1 + 1/ng2)
+
+        for i in range(len((path_diff))):
+            for j in range(len((path_diff))):
+                tStat.ix[i,j] = path_diff[i,j] / (np.sqrt(k1*SE1[i,j]*SE2[i,j]+k2) * k3)
+                if (tStat.ix[i,j] != 0):
+                    pval.ix[i,j] = scipy.stats.t.sf(tStat.ix[i,j], ng1+ng2-2)
+
+        print(tStat)
+        print(pval)

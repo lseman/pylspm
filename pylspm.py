@@ -1,9 +1,10 @@
 # PyLS-PM Library
 # Author: Laio Oriel Seman
 # Creation: November 2016
-# Description: Library based on Juan Manuel Velasquez Estrada's simplePLS and Gaston Sanchez's plspm made in R
+# Description: Library based on Juan Manuel Velasquez Estrada's simplePLS, Gaston Sanchez's plspm and Mikko Rönkkö's matrixpls made in R
 # This library implements a new internal path scheme, entitled Fuzzy Scheme
 # and calculates Path Coefficients using a Quadratic Possibilistic Regression
+
 import pandas as pd
 import numpy as np
 import copy
@@ -28,7 +29,7 @@ class PyLSpm(object):
         X = X + mean_
         return X
 
-    def runPrediction(self):
+    def runPrediction(self, method='exogenous'):
         exoVar = []
         endoVar = []
 
@@ -38,39 +39,41 @@ class PyLSpm(object):
             else:
                 exoVar.append(self.latent[i])
 
-        # Exogenous
-        Beta = self.path_matrix.ix[endoVar][endoVar]
-        Gamma = self.path_matrix.ix[endoVar][exoVar]
+        if (method=='exogenous'):
+            # Exogenous
+            Beta = self.path_matrix.ix[endoVar][endoVar]
+            Gamma = self.path_matrix.ix[endoVar][exoVar]
 
-        beta = []
-        for i in range(len(self.latent)):
-            if (self.latent[i] in exoVar):
-                beta.append(1)
-            else:
-                beta.append(0)
+            beta = []
+            for i in range(len(self.latent)):
+                if (self.latent[i] in exoVar):
+                    beta.append(1)
+                else:
+                    beta.append(0)
 
-        beta=np.diag(beta)
-  
-        beta_ = []
-        for i in range(len(Beta)):
-            beta_.append(1)
-        beta_=np.diag(beta_)
+            beta=np.diag(beta)
+      
+            beta_ = []
+            for i in range(len(Beta)):
+                beta_.append(1)
+            beta_=np.diag(beta_)
 
-        mid = pd.DataFrame.dot(Gamma.T,np.linalg.inv(beta_-Beta.T))
+            mid = pd.DataFrame.dot(Gamma.T,np.linalg.inv(beta_-Beta.T))
 
-        beta = pd.DataFrame(beta, index=self.latent, columns=self.latent)
-        mid=(mid.T.values).flatten('F')
+            beta = pd.DataFrame(beta, index=self.latent, columns=self.latent)
+            mid=(mid.T.values).flatten('F')
 
-        k=0
-        for j in range(len(exoVar)):
-            for i in range(len(endoVar)):
-                beta.ix[endoVar[i],exoVar[j]] = mid[k]
-                k+=1
+            k=0
+            for j in range(len(exoVar)):
+                for i in range(len(endoVar)):
+                    beta.ix[endoVar[i],exoVar[j]] = mid[k]
+                    k+=1
 
+        if (method=='redundancy'):
         # Redundancy
-#        beta = self.path_matrix
-#        beta_ = pd.DataFrame(1, index=np.arange(len(exoVar)), columns=np.arange(len(exoVar)))
-#        beta.ix[exoVar,exoVar] = np.diag(np.diag(beta_.values))
+            beta = self.path_matrix
+            beta_ = pd.DataFrame(1, index=np.arange(len(exoVar)), columns=np.arange(len(exoVar)))
+            beta.ix[exoVar,exoVar] = np.diag(np.diag(beta_.values))
 
         partial_ = pd.DataFrame.dot(self.outer_weights, beta.T.values)
         prediction = pd.DataFrame.dot(partial_, self.outer_loadings.T.values)
@@ -358,10 +361,10 @@ class PyLSpm(object):
             fscores = self.normaliza(fscores)
             last_outer_weights = copy.deepcopy(outer_weights)
 
-            # outer_weights
+            # Outer Weights
             for i in range(len(latent)):
                   
-                # formativo / Modo B
+                # Formativo / Modo B
                 if(Variables ['mode'][Variables['latent']==latent[i]]).any()=="B":
 
                     a = data_[Variables ['measurement'][Variables['latent']==latent[i]]]
@@ -382,7 +385,7 @@ class PyLSpm(object):
                     myindex_= latent[i]            
                     outer_weights.ix[myindex.values, myindex_]  = np.dot(inv_,cor_)
 
-                # reflexivo / Modo A
+                # Reflexivo / Modo A
                 if(Variables ['mode'][Variables['latent']==latent[i]]).any()=="A":
                     a = data_[Variables ['measurement'][Variables['latent']==latent[i]]]
                     cov_ = []
@@ -409,7 +412,8 @@ class PyLSpm(object):
 
         fscores = pd.DataFrame.dot(data_,outer_weights)
 
-        #outer loadings
+        # Outer Loadings
+
         outer_loadings = pd.DataFrame(0, index=np.arange(len(manifests)), columns=latent)
         outer_loadings.index = manifests
 
@@ -431,6 +435,7 @@ class PyLSpm(object):
         path_matrix_range = copy.deepcopy(path_matrix)
 
         # Paths
+
         r2 = pd.DataFrame(0, index=np.arange(1), columns=latent)
         dependant=np.unique(LVariables.ix[:,'target'])
 
@@ -440,7 +445,7 @@ class PyLSpm(object):
             independant_ = fscores.ix[:,independant]
 
             if (self.regression=='ols'):
-            # Path Normal
+                # Path Normal
                 coef, resid = np.linalg.lstsq(independant_, dependant_)[:2]
                 r2_ = 1 - resid / (dependant_.size * dependant_.var())
                 r2[dependant[i]] = r2_
