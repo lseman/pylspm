@@ -1,6 +1,6 @@
 import pandas
 from multiprocessing import Pool, freeze_support
-from pylspm import PyLSpm
+#from pylspm import PyLSpm
 from results import PyLSpmHTML
 from boot import PyLSboot
 import numpy as np
@@ -8,19 +8,20 @@ from numpy import inf
 import pandas as pd
 import copy
 import scipy.stats
-
+from pylspm import PyLSpm
+import time
 
 if __name__ == '__main__':
     freeze_support()
 
     # Parâmetros
 
-    boot = 3
+    boot = 0
     nrboot = 100
     cores = 8
 
     method = 'percentile'
-    data = 'dados2G.csv'
+    data = 'dados2.csv'
     lvmodel = 'lvmodel.csv'
     mvmodel = 'mvmodel.csv'
     scheme = 'path'
@@ -31,9 +32,11 @@ if __name__ == '__main__':
     data_ = pandas.read_csv(data)
         
     if (boot==0):
-        tese = PyLSpm(data_, lvmodel, mvmodel, scheme, regression, 0, 100)
-        imprime = PyLSpmHTML(tese)
-        imprime.generate()
+
+        tese = PyLSpm(data, lvmodel, mvmodel, scheme, regression, 0, 100)
+        tese.impa()
+#        imprime = PyLSpmHTML(tese)
+#        imprime.generate()
 
     elif (boot==1):
         tese = PyLSboot(nrboot, cores, data_, lvmodel, mvmodel, scheme, regression, 0, 100)
@@ -171,18 +174,12 @@ if __name__ == '__main__':
 
         path_diff = np.abs(estimado1[0] - estimado2[0])
 
-        print(path_diff)
         
         tStat = pd.DataFrame(0, index=range(len(path_diff)), columns=range(len(path_diff)))
         pval = pd.DataFrame(0, index=range(len(path_diff)), columns=range(len(path_diff)))
 
         SE1 = estimado1[1]
         SE2 = estimado2[1]
-
-        print(SE1)
-        print(SE2)
-        print(estimado1[0])
-        print(estimado2[0])
 
         ng1 = len(data1)
         ng2 = len(data2)
