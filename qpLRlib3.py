@@ -3,7 +3,7 @@ from gurobipy import *
 import pandas
 
 
-def otimiza(y, x, size, h):
+def otimiza(y, x, size, h, method='fuzzy'):
 
     n = len(y)
     qsi = 0.0000000000001
@@ -30,14 +30,25 @@ def otimiza(y, x, size, h):
         awL[i] = model.addVar(lb=-0.0, name="awL%d" % i)
         awR[i] = model.addVar(lb=-0.0, name="awR%d" % i)
 
-    # para 2
-    k1a = 10  # central
-    k2a = 1  # periférica
+    if method=='fuzzy':
+        # para 2
+        k1a = 10  # central
+        k2a = 1  # periférica
 
-    # para 1
-    k1b = 10
-    k2b = 1
-    k2b2 = 1/n
+        # para 1
+        k1b = 10
+        k2b = 1
+        k2b2 = 1/n
+
+    if method=='ols':
+        # para 2
+        k1a = 1  # central
+        k2a = 0  # periférica
+
+        # para 1
+        k1b = 1
+        k2b = 0
+        k2b2 = 0        
 
     if (size == 2):
 

@@ -32,9 +32,11 @@ if __name__ == '__main__':
     data_ = pandas.read_csv(data)
         
     if (boot==0):
+        
 
         tese = PyLSpm(data, lvmodel, mvmodel, scheme, regression, 0, 100)
-        tese.impa()
+        impa = tese.impa()
+#        print(impa)
 #        imprime = PyLSpmHTML(tese)
 #        imprime.generate()
 

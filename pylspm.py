@@ -5,15 +5,21 @@
 # This library implements a new internal path scheme, entitled Fuzzy Scheme
 # and calculates Path Coefficients using a Quadratic Possibilistic Regression
 
+from pandas.stats.api import ols
 import pandas as pd
 import numpy as np
 import copy
 import scipy as sp
 import scipy.stats
-import csv
 from qpLRlib3 import otimiza
+import statsmodels.api as sm
+import scipy.linalg
 
 class PyLSpm(object):
+
+    def reg_m(self, y, x):
+        results = sm.OLS(y, x).fit()
+        return results.summary()
 
     def normaliza(self, X):
         mean_ = np.mean(X, 0)
@@ -29,73 +35,6 @@ class PyLSpm(object):
         X = X * scale_
         X = X + mean_
         return X
-
-    def runIMPA(self):
-
-        # Unstandardized Scores
-        scale_ = np.std(self.data, 0)
-        outer_weights_ = pd.DataFrame.divide (self.outer_weights, scale_, axis=0)
-        relativo = pd.DataFrame.sum (outer_weights_, axis=0)
-
-        for i in range(len(outer_weights_)):
-            for j in range(len(outer_weights_.columns)):
-                outer_weights_.ix[i,j] = (outer_weights_.ix[i,j])/relativo[j]
-
-        unstandardizedScores = pd.DataFrame.dot(self.data,outer_weights_)
-
-        # Rescaled Scores
-        rescaledScores = pd.DataFrame(0, index=range(len(self.data)), columns=self.latent)
-
-        for i in range(len(self.latent)):
-            block = self.data[self.Variables ['measurement'][self.Variables['latent']==self.latent[i]]]
-
-            maximo = pd.DataFrame.max(block, axis=0)
-            minimo = pd.DataFrame.min(block, axis=0)
-            minimo_ = pd.DataFrame.min(minimo)
-            maximo_ = pd.DataFrame.max(maximo)
-
-            rescaledScores[self.latent[i]] = 100*(unstandardizedScores[self.latent[i]]-minimo_)/(maximo_-minimo_)
-
-        # Manifests Indirect Effects
-
-        manifestsIndEffects = pd.DataFrame(self.outer_weights, index=self.manifests, columns=self.latent)
-
-        effect_ = pd.DataFrame(self.outer_weights, index=self.manifests, columns=self.latent)
-
-        for i in range(len(self.latent[i])):
-            effect_ = pd.DataFrame.dot(effect_, self.path_matrix.T)
-            manifestsIndEffects = manifestsIndEffects + effect_
-
-        # Peformance Scores LV
-
-        performanceScoresLV = pd.DataFrame.mean(rescaledScores, axis=0)
-
-        # Performance Manifests
-
-        maximo = pd.DataFrame.max(self.data, axis=0)
-        minimo = pd.DataFrame.min(self.data, axis=0)
-        diff = maximo-minimo
-        performanceManifests = pd.DataFrame.subtract (self.data, minimo.T, axis=1)
-        performanceManifests = pd.DataFrame.divide (performanceManifests, diff, axis = 1)
-        performanceManifests = performanceManifests * 100
-
-        # Unstandardized Path
-
-        unstandardizedPath = pd.DataFrame(0, index=self.latent, columns=self.latent)
-
-        dependant=np.unique(self.LVariables.ix[:,'target'])
-        for i in range(len(dependant)):
-            independant=self.LVariables[self.LVariables.ix[:,"target"]==dependant[i]]["source"]
-            dependant_ = unstandardizedScores.ix[:,dependant[i]]
-            independant_ = unstandardizedScores.ix[:,independant]
-
-            coef, resid = np.linalg.lstsq(independant_, dependant_)[:2]
-            unstandardizedPath.ix[dependant[i],independant] = coef
-
-        print(self.path_matrix)
-        print(unstandardizedPath)
-
-        return [unstandardizedScores, performanceScoresLV, manifestsIndEffects]
 
     def runPrediction(self, method='exogenous'):
         exoVar = []
@@ -421,7 +360,7 @@ class PyLSpm(object):
                         b = list(fscores.ix[:,latent[i]])
                         a_ = list(a.ix[:,j])
                         cov_.append( np.cov(a_,b)[0][1] )
-                        
+
                     myindex = Variables ['measurement'][Variables['latent']==latent[i]]
                     myindex_ = latent[i]
                     outer_weights.ix[myindex.values, myindex_] = cov_
@@ -500,6 +439,8 @@ class PyLSpm(object):
             indirect_effects = indirect_effects + path_effects[i]
 
         total_effects = indirect_effects + path_matrix
+
+        # Matrix Fuzzy
 
         for i in range(len(path_matrix.columns)):
             for j in range(len(path_matrix.columns)):
@@ -594,3 +535,96 @@ class PyLSpm(object):
 
     def convergiu(self):
         return self.convergiu
+
+    def runIMPA(self):
+
+        # Unstandardized Scores
+
+        scale_ = np.std(self.data, 0)
+        outer_weights_ = pd.DataFrame.divide (self.outer_weights, scale_, axis=0)
+        relativo = pd.DataFrame.sum (outer_weights_, axis=0)
+
+        for i in range(len(outer_weights_)):
+            for j in range(len(outer_weights_.columns)):
+                outer_weights_.ix[i,j] = (outer_weights_.ix[i,j])/relativo[j]
+
+        unstandardizedScores = pd.DataFrame.dot(self.data,outer_weights_)
+
+        # Rescaled Scores
+
+        rescaledScores = pd.DataFrame(0, index=range(len(self.data)), columns=self.latent)
+
+        for i in range(len(self.latent)):
+            block = self.data[self.Variables ['measurement'][self.Variables['latent']==self.latent[i]]]
+
+            maximo = pd.DataFrame.max(block, axis=0)
+            minimo = pd.DataFrame.min(block, axis=0)
+            minimo_ = pd.DataFrame.min(minimo)
+            maximo_ = pd.DataFrame.max(maximo)
+
+            rescaledScores[self.latent[i]] = 100*(unstandardizedScores[self.latent[i]]-minimo_)/(maximo_-minimo_)
+
+        # Manifests Indirect Effects
+
+        manifestsIndEffects = pd.DataFrame(self.outer_weights, index=self.manifests, columns=self.latent)
+
+        effect_ = pd.DataFrame(self.outer_weights, index=self.manifests, columns=self.latent)
+
+        for i in range(len(self.latent[i])):
+            effect_ = pd.DataFrame.dot(effect_, self.path_matrix.T)
+            manifestsIndEffects = manifestsIndEffects + effect_
+
+        # Peformance Scores LV
+
+        performanceScoresLV = pd.DataFrame.mean(rescaledScores, axis=0)
+
+        # Performance Manifests
+
+        maximo = pd.DataFrame.max(self.data, axis=0)
+        minimo = pd.DataFrame.min(self.data, axis=0)
+        diff = maximo-minimo
+        performanceManifests = pd.DataFrame.subtract (self.data, minimo.T, axis=1)
+        performanceManifests = pd.DataFrame.divide (performanceManifests, diff, axis = 1)
+        performanceManifests = performanceManifests * 100
+
+        performanceManifests = pd.DataFrame.mean(performanceManifests, axis=0)
+
+        # Unstandardized Path
+
+        unstandardizedPath = pd.DataFrame(0, index=self.latent, columns=self.latent)
+
+        dependant=np.unique(self.LVariables.ix[:,'target'])
+        for i in range(len(dependant)):
+            independant=self.LVariables[self.LVariables.ix[:,"target"]==dependant[i]]["source"]
+            dependant_ = unstandardizedScores.ix[:,dependant[i]]
+            independant_ = unstandardizedScores.ix[:,independant]
+            ac, awL, awR = otimiza(dependant_, independant_, len(independant_.columns), self.h, 'ols')
+            unstandardizedPath.ix[dependant[i],independant] = ac
+
+        print(unstandardizedPath)
+
+        # Unstandardized Total Effects
+
+        path_effects = [None] * len(self.latent)
+        path_effects[0] = unstandardizedPath
+
+        unstandardizedIndirectEffects = pd.DataFrame(0, index=self.latent, columns=self.latent)
+
+        for i in range(1,len(self.latent)):
+            path_effects[i] = pd.DataFrame.dot(path_effects[i-1],unstandardizedPath)
+        for i in range(1,len(path_effects)):
+            unstandardizedIndirectEffects = unstandardizedIndirectEffects + path_effects[i]
+
+        unstandardizedPathTotal = unstandardizedIndirectEffects + unstandardizedPath
+
+        # Unstandardized Manifests Indirect Effects
+
+        unstandardizedManifestsIndEffects = pd.DataFrame(outer_weights_, index=self.manifests, columns=self.latent)
+
+        unstandardizedEffect_ = pd.DataFrame(outer_weights_, index=self.manifests, columns=self.latent)
+
+        for i in range(len(self.latent[i])):
+            unstandardizedEffect_ = pd.DataFrame.dot(unstandardizedEffect_, unstandardizedPath.T)
+            unstandardizedManifestsIndEffects = unstandardizedManifestsIndEffects + unstandardizedEffect_
+
+        return [performanceScoresLV, performanceManifests, unstandardizedPathTotal, unstandardizedManifestsIndEffects]
