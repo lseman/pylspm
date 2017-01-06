@@ -7,6 +7,10 @@ import pandas as pd
 import copy
 import scipy.stats
 
+from matplotlib import pyplot as plt
+from scipy.cluster.hierarchy import dendrogram, linkage
+from scipy.cluster.hierarchy import fcluster
+
 from pylspm import PyLSpm
 from results import PyLSpmHTML
 from boot import PyLSboot
@@ -16,14 +20,14 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    boot = 0
-    nrboot = 100
+    boot = 3
+    nrboot = 20
     cores = 8
 
     method = 'percentile'
-    data = 'dados4.csv'
+    data = 'dados2G.csv'
     lvmodel = 'lvmodel.csv'
-    mvmodel = 'mvmodel.csv'
+    mvmodel = 'mvmodel_.csv'
     scheme = 'path'
     regression = 'ols'
 
@@ -34,14 +38,30 @@ if __name__ == '__main__':
     if (boot==0):
 
         tese = PyLSpm(data, lvmodel, mvmodel, scheme, regression, 0, 100)
+        print(tese.predict())
+        Z = linkage(tese.predict().values, 'ward')
+        plt.figure(figsize=(25, 10))
+        plt.title('Dendograma de Agrupamento Hierárquico')
+        plt.xlabel('Amostra')
+        plt.ylabel('Distância')
+        dendrogram(
+            Z,
+            leaf_rotation=90.,  # rotates the x axis labels
+            leaf_font_size=8.,  # font size for the x axis labels
+        )
+        plt.show()
         print(tese.path_matrix)
+        max_d = 10
+        clusters = fcluster(Z, max_d, criterion='distance')
+        print(clusters)
+        print(tese.predict)
 #        tese.nipals()
 #        impa = tese.impa()
 
 #        print(impa[0])
 #        print(impa[2].T)
-        imprime = PyLSpmHTML(tese)
-        imprime.generate()
+#        imprime = PyLSpmHTML(tese)
+#        imprime.generate()
 
     elif (boot==1):
         tese = PyLSboot(nrboot, cores, data_, lvmodel, mvmodel, scheme, regression, 0, 100)
@@ -165,8 +185,8 @@ if __name__ == '__main__':
 
             return [mean_, deviation_]
 
-        data1 = (data_.loc[data_['SEM'] == 0]).drop('SEM', axis=1)
-        data2 = (data_.loc[data_['SEM'] == 1]).drop('SEM', axis=1)
+        data1 = (data_.loc[data_['SEM'] == 4]).drop('SEM', axis=1)
+        data2 = (data_.loc[data_['SEM'] == 0]).drop('SEM', axis=1)
 
         estimData1 = PyLSboot(nrboot, cores, data1, lvmodel, mvmodel, scheme, regression, 0, 100)
         estimData2 = PyLSboot(nrboot, cores, data2, lvmodel, mvmodel, scheme, regression, 0, 100)
@@ -200,3 +220,7 @@ if __name__ == '__main__':
 
         print(tStat)
         print(pval)
+
+        print('Paths')
+        print(estimado1[0])
+        print(estimado2[0])

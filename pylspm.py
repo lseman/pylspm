@@ -17,10 +17,6 @@ import scipy.linalg
 
 class PyLSpm(object):
 
-    def reg_m(self, y, x):
-        results = sm.OLS(y, x).fit()
-        return results.summary()
-
     def normaliza(self, X):
         mean_ = np.mean(X, 0)
         scale_ = np.std(X, 0)
@@ -381,8 +377,11 @@ class PyLSpm(object):
             if (diff_ < (10**(-(self.stopCriterion)))):
                 convergiu = 1
                 break
-
         # END LOOP
+
+        # Bootstraping trick
+        if(np.isnan(outer_weights).any().any()):
+            return None
 
         fscores = pd.DataFrame.dot(data_,outer_weights)
 
@@ -420,15 +419,7 @@ class PyLSpm(object):
             if (self.regression=='ols'):
                 # Path Normal
                 coef, resid = np.linalg.lstsq(independant_, dependant_)[:2]
-                print(independant_)
-                a = list(independant_.values.flatten())
-                print(a)
-                b = list(dependant_.values)
-                print(b)
-                cor, p = sp.stats.pearsonr(a, b)
-                print(p)
-
-                r2[dependant[i]] = 1 - resid / (dependant_.size * dependant_.var())
+#                r2[dependant[i]] = 1 - resid / (dependant_.size * dependant_.var())
 
                 path_matrix.ix[dependant[i],independant] = coef
                 path_matrix_low.ix[dependant[i],independant] = 0
@@ -601,19 +592,3 @@ class PyLSpm(object):
             unstandardizedManifestsIndEffects = unstandardizedManifestsIndEffects + unstandardizedEffect_
 
         return [performanceScoresLV, performanceManifests, unstandardizedPathTotal, unstandardizedManifestsIndEffects]
-
-    def nipals(self):
-            block = self.data[self.Variables ['measurement'][self.Variables['latent']=='Ego']]
-            print(block)
-            cor_mat = np.cov(block.T)
-            evals, evecs = np.linalg.eig(cor_mat)
-            U, S, V = np.linalg.svd(cor_mat, full_matrices=True)
-
-            indices = np.argsort(evals)
-            indices = indices[::-1]
-            evecs = evecs[:,indices]
-            evals = evals[indices]
-
-            loadings = V[0,:]*np.sqrt(evals[0])
-
-            print(loadings)
