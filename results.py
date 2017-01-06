@@ -177,9 +177,12 @@ class PyLSpmHTML(object):
               margin-left: -22px;
               margin-right: -22px;
           }
+          .nav-pills>li>a {
+            padding: 5px 15px !important;
+          }
           .sidebar {
             position: fixed;
-            top: 51px;
+            top: 41px;
             bottom: 0;
             left: 0;
             z-index: 1000;
@@ -249,6 +252,8 @@ class PyLSpmHTML(object):
         <div class="row">
         <div class="col-sm-3 col-md-2 sidebar" id="myScrollspy">
         <ul class="nav nav-pills nav-stacked">
+        <div align="center">
+        <img src="logo.png"></div>
         <li class=""><a align="center" href="#overall"><b>Overall</b></a></li>
         <li class=""><a href="#reliability">Construct Reliability</a></li>
         <li class=""><a href="#htmt">HTMT</a></li>
@@ -318,7 +323,7 @@ class PyLSpmHTML(object):
 
         f.write('<h1 id="others">Others</h1><hr>')
         f.write(fscores)
-        f.write(empirical)
-        f.write(implied)
+#        f.write(empirical)
+#        f.write(implied)
         f.write(rodape)
         f.close()

@@ -1,15 +1,15 @@
-import pandas
 from multiprocessing import Pool, freeze_support
-#from pylspm import PyLSpm
-from results import PyLSpmHTML
-from boot import PyLSboot
+
+import pandas
 import numpy as np
 from numpy import inf
 import pandas as pd
 import copy
 import scipy.stats
+
 from pylspm import PyLSpm
-import time
+from results import PyLSpmHTML
+from boot import PyLSboot
 
 if __name__ == '__main__':
     freeze_support()
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     cores = 8
 
     method = 'percentile'
-    data = 'dados2.csv'
+    data = 'dados4.csv'
     lvmodel = 'lvmodel.csv'
     mvmodel = 'mvmodel.csv'
     scheme = 'path'
@@ -32,13 +32,16 @@ if __name__ == '__main__':
     data_ = pandas.read_csv(data)
         
     if (boot==0):
-        
 
         tese = PyLSpm(data, lvmodel, mvmodel, scheme, regression, 0, 100)
-        impa = tese.impa()
-#        print(impa)
-#        imprime = PyLSpmHTML(tese)
-#        imprime.generate()
+        print(tese.path_matrix)
+#        tese.nipals()
+#        impa = tese.impa()
+
+#        print(impa[0])
+#        print(impa[2].T)
+        imprime = PyLSpmHTML(tese)
+        imprime.generate()
 
     elif (boot==1):
         tese = PyLSboot(nrboot, cores, data_, lvmodel, mvmodel, scheme, regression, 0, 100)

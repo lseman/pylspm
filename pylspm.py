@@ -36,7 +36,7 @@ class PyLSpm(object):
         X = X + mean_
         return X
 
-    def runPrediction(self, method='exogenous'):
+    def predict(self, method='exogenous'):
         exoVar = []
         endoVar = []
 
@@ -97,22 +97,22 @@ class PyLSpm(object):
 
         return predictedData
 
-    def runSRMR(self):
-        srmr = (pd.DataFrame.corr(self.data_) - self.runImplied())
+    def srmr(self):
+        srmr = (pd.DataFrame.corr(self.data_) - self.implied())
         srmr = np.sqrt(((srmr.values) ** 2).mean())
         return srmr
 
-    def runImplied(self):
+    def implied(self):
         corLVs = pd.DataFrame.cov(self.fscores)
         implied_ = pd.DataFrame.dot(self.outer_loadings,corLVs)
         implied = pd.DataFrame.dot(implied_, self.outer_loadings.T)
         implied.values[[np.arange(len(self.manifests))]*2] = 1
         return implied
 
-    def runEmpirical(self):
+    def empirical(self):
         return pd.DataFrame.corr(self.data)
 
-    def runCR(self):
+    def cr(self):
         # Composite Reliability
         composite = pd.DataFrame(0, index=np.arange(1), columns=self.latent)
 
@@ -139,10 +139,9 @@ class PyLSpm(object):
         composite = composite.T
         return(composite)
 
-    def runHTMT(self):
+    def htmt(self):
 
-        htmt_ = pd.DataFrame.corr(self.data)
-        htmt_ = pd.DataFrame(htmt_, index=htmt_.index, columns= htmt_.index)
+        htmt_ = pd.DataFrame(pd.DataFrame.corr(self.data), index=self.manifests, columns= self.manifests)
 
         mean = []
         allBlocks = []
@@ -175,15 +174,15 @@ class PyLSpm(object):
 
         return htmt
 
-    def runComunalidades(self):
+    def comunalidades(self):
         # Comunalidades
         return self.outer_loadings**2
 
-    def runAVE(self):
+    def AVE(self):
         # AVE
-        return self.runComunalidades().apply(lambda column: column.sum()/(column != 0).sum())
+        return self.comunalidades().apply(lambda column: column.sum()/(column != 0).sum())
 
-    def runRhoA(self):
+    def rhoA(self):
         # rhoA
         rhoA = pd.DataFrame(0, index=np.arange(1), columns=self.latent)
 
@@ -202,7 +201,7 @@ class PyLSpm(object):
 
         return rhoA.T
 
-    def runXloads(self):
+    def xloads(self):
         # Xloadings
         A = self.data_.transpose().values
         B = self.fscores.transpose().values
@@ -217,12 +216,12 @@ class PyLSpm(object):
 
         return xloads
 
-    def runCorLVs(self):
+    def corLVs(self):
         # Correlations LVs
         corLVs_ = np.tril(pd.DataFrame.corr(self.fscores))
         return pd.DataFrame(corLVs_, index=self.latent, columns=self.latent)
 
-    def runAlphas(self):
+    def alpha(self):
         # Cronbach Alpha
         alpha = pd.DataFrame(0, index=np.arange(1), columns=self.latent)
 
@@ -261,14 +260,21 @@ class PyLSpm(object):
             
         LVariables = pd.read_csv(LVcsv)
         Variables = pd.read_csv(Mcsv)
-        manifests = list(data.columns.values)
-        latent = list(np.unique(LVariables))
+
+        manifests_ = Variables['measurement'].values.flatten('F')
+        manifests__  = np.unique(manifests_, return_index=True)[1]
+        manifests = [manifests_[index] for index in sorted(manifests__ )]
+
+        latent_ = LVariables.values.flatten('F')
+        latent__  = np.unique(latent_, return_index=True)[1]
+        latent = [latent_[index] for index in sorted(latent__ )]
 
         self.manifests = manifests
         self.latent = latent
         self.Variables = Variables
         self.LVariables = LVariables
 
+        data=data[manifests]
         data_ = self.normaliza(data)
         self.data = data
         self.data_ = data_
@@ -414,6 +420,14 @@ class PyLSpm(object):
             if (self.regression=='ols'):
                 # Path Normal
                 coef, resid = np.linalg.lstsq(independant_, dependant_)[:2]
+                print(independant_)
+                a = list(independant_.values.flatten())
+                print(a)
+                b = list(dependant_.values)
+                print(b)
+                cor, p = sp.stats.pearsonr(a, b)
+                print(p)
+
                 r2[dependant[i]] = 1 - resid / (dependant_.size * dependant_.var())
 
                 path_matrix.ix[dependant[i],independant] = coef
@@ -425,6 +439,12 @@ class PyLSpm(object):
                 path_matrix.ix[dependant[i],independant] = ac
                 path_matrix_low.ix[dependant[i],independant] = awL
                 path_matrix_high.ix[dependant[i],independant] = awR
+
+                # Matrix Fuzzy
+
+                for i in range(len(path_matrix.columns)):
+                    for j in range(len(path_matrix.columns)):
+                        path_matrix_range.ix[i,j] = str(round(path_matrix_low.ix[i,j],3)) + ' ' + str(round(path_matrix_high.ix[i,j],3))
 
         r2 = r2.T
 
@@ -439,12 +459,6 @@ class PyLSpm(object):
             indirect_effects = indirect_effects + path_effects[i]
 
         total_effects = indirect_effects + path_matrix
-
-        # Matrix Fuzzy
-
-        for i in range(len(path_matrix.columns)):
-            for j in range(len(path_matrix.columns)):
-                path_matrix_range.ix[i,j] = str(round(path_matrix_low.ix[i,j],3)) + ' ' + str(round(path_matrix_high.ix[i,j],3))
 
         self.path_matrix = path_matrix
         self.path_matrix_high = path_matrix_high
@@ -461,59 +475,20 @@ class PyLSpm(object):
         self.outer_weights = outer_weights
         self.r2 = r2
 
-    def impa(self):
-        return self.runIMPA()
-
-    def predict(self):
-        return self.runPrediction()
-
-    def srmr(self):
-        return self.runSRMR()
-
     def scheme(self):
         return self.scheme
 
     def regression(self):
         return self.reg
 
-    def implied(self):
-        return self.runImplied()
-
-    def empirical(self):
-        return self.runEmpirical()
-
-    def cr(self):
-        return self.runCR()
-
-    def htmt(self):
-        return self.runHTMT()
-
     def r2(self):
         return self.r2
-
-    def alpha(self):
-        return self.runAlphas()
-
-    def corLVs(self):
-        return self.runCorLVs()
-
-    def xloads(self):
-        return self.runXloads()
-
-    def rhoA(self):
-        return self.runRhoA()
 
     def outer_loadings(self):
         return self.outer_loadings
 
     def outer_weights(self):
         return self.outer_weights
-
-    def comunalidades(self):
-        return self.runComunalidades()
-
-    def AVE(self):
-        return self.runAVE()
 
     def fscores(self):
         return self.fscores
@@ -536,7 +511,7 @@ class PyLSpm(object):
     def convergiu(self):
         return self.convergiu
 
-    def runIMPA(self):
+    def impa(self):
 
         # Unstandardized Scores
 
@@ -601,8 +576,6 @@ class PyLSpm(object):
             ac, awL, awR = otimiza(dependant_, independant_, len(independant_.columns), self.h, 'ols')
             unstandardizedPath.ix[dependant[i],independant] = ac
 
-        print(unstandardizedPath)
-
         # Unstandardized Total Effects
 
         path_effects = [None] * len(self.latent)
@@ -628,3 +601,19 @@ class PyLSpm(object):
             unstandardizedManifestsIndEffects = unstandardizedManifestsIndEffects + unstandardizedEffect_
 
         return [performanceScoresLV, performanceManifests, unstandardizedPathTotal, unstandardizedManifestsIndEffects]
+
+    def nipals(self):
+            block = self.data[self.Variables ['measurement'][self.Variables['latent']=='Ego']]
+            print(block)
+            cor_mat = np.cov(block.T)
+            evals, evecs = np.linalg.eig(cor_mat)
+            U, S, V = np.linalg.svd(cor_mat, full_matrices=True)
+
+            indices = np.argsort(evals)
+            indices = indices[::-1]
+            evecs = evecs[:,indices]
+            evals = evals[indices]
+
+            loadings = V[0,:]*np.sqrt(evals[0])
+
+            print(loadings)

@@ -38,7 +38,7 @@ def otimiza(y, x, size, h, method='fuzzy'):
         # para 1
         k1b = 10
         k2b = 1
-        k2b2 = 1/n
+        k2b2 = 3/n
 
     if method=='ols':
         # para 2
@@ -67,7 +67,6 @@ def otimiza(y, x, size, h, method='fuzzy'):
             model.addConstr(ac[0] + x1[i] * ac[1] + x2[i] * ac[2] + (1 - h) * (awR[0] + abs(x1[i]) * awR[1] + abs(x2[i]) * awR[2]) >= y[i])
 
         model.optimize()
-#		print([ac[0].x, awL[0].x, awR[0].x], [ac[1].x, ac[2].x], [awL[1].x, awL[2].x], [awR[1].x, awR[2].x])
         return [ac[1].x, ac[2].x], [ac[1].x - awL[1].x, ac[2].x - awL[2].x], [ac[1].x + awR[1].x, ac[2].x + awR[2].x]
 
     elif (size == 1):
@@ -86,5 +85,34 @@ def otimiza(y, x, size, h, method='fuzzy'):
             model.addConstr(ac[0] + x1[i] * ac[1] + (1 - h) * (awR[0] + abs(x1[i]) * awR[1]) >= y[i])
 
         model.optimize()
-#        print([ac[0].x, awL[0].x, awR[0].x])
         return ac[1].x, ac[1].x - awL[1].x, ac[1].x + awR[1].x
+
+def IC():
+    ylow = []
+    yhigh = []
+    ymid = []
+    ylow.append(0)
+    ymid.append(0)
+    yhigh.append(0)
+
+    for i in range(1,len(y)):
+        ylow.append((ac[1].x-awL[1].x)+(ac[2].x-awL[2].x)*x1[i])
+
+    for i in range(1,len(y)):
+        yhigh.append((ac[1].x+awR[1].x)+(ac[2].x+awR[2].x)*x1[i])
+
+    for i in range(1,len(y)):
+        ymid.append((ylow[i]+yhigh[i])/2)
+
+    SST = 0
+
+    for i in range(1,len(y)):
+        SST+= (y[i]-ylow[i])*(y[i]-ylow[i]) + (yhigh[i]-y[i])*(yhigh[i]-y[i])
+
+    SSR = 0
+
+    for i in range(1,len(y)):
+        SSR+= (ymid[i]-ylow[i])*(ymid[i]-ylow[i]) + (yhigh[i]-ymid[i])*(yhigh[i]-ymid[i])
+
+    IC = SSR/SST
+    return IC
