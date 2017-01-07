@@ -1,6 +1,6 @@
-# PyPLS
+# PyPLS-PM
 
-**pyplspm** is a Python package dedicated to Partial Least Squares Path Modeling (PLS-PM) analisys using path scheme.
+**pylspm** is a [Python](http://www.python.org/) package dedicated to Partial Least Squares Path Modeling (PLS-PM) analisys using path scheme.
 
 ## Dependencies
 
@@ -11,10 +11,18 @@
 ## Usage
 
 ```python
-PyPLS(data, LVcsv, MVcsv, max, stopCriterion)
+# Instantiating the PyPLS class
+plspm = PyLSpm(data, LVcsv, MVcsv, scheme, regression, maxit, stopCriterion)
 ```
 
-Where data, LVcsv and MVcsv are CSV files.
+Where **data**, **LVcsv** and **MVcsv** are CSV files;
+
+**maxit** (default = 300) is the maximum number of iterations allowed until convergence;
+
+and **stopCriterion** (default = 10^-7) is the desired error.
+
+* The available schemes are: centroid, factor, path and fuzzy.
+* The available regressions are OLS and fuzzy.
 
 ### Data file
 
@@ -37,7 +45,7 @@ LV1 | LV3
 
 Defining how the latent variables are influencing each other.
 
-# MVcsv file
+### MVcsv file
 
 The MVcsv must contain three collums in the following format:
 
@@ -50,6 +58,17 @@ LV3 | indicator4 | A
 
 Defining the indicators connected with each latent variables and the connection mode (A or B).
 
-# References
+## Bootstraping
 
-Library based on Juan Manuel Velasquez Estrada's simplePLS and Gaston Sanchez's plspm made in R
+```python
+# Instantiating the PyPLSboot class
+boot = PyLSboot(br, cores, data, LVcsv, MVcsv, scheme, regression, maxit, stopCriterion)
+```
+
+Where **br** is the number of replications desired;
+
+and **cores** is the numbers of cores to use.
+
+## References
+
+Library based on Juan Manuel Velasquez Estrada's simplePLS, Gaston Sanchez's plspm and Mikko Rönkkö's matrixpls made in R

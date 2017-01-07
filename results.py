@@ -4,6 +4,7 @@ class PyLSpmHTML(object):
         self.path_matrix = plsobject.path_matrix
         self.path_matrix_low = plsobject.path_matrix_low
         self.path_matrix_high = plsobject.path_matrix_high
+        self.path_matrix_range = plsobject.path_matrix_range
 
         self.corLVs = plsobject.corLVs()
         self.AVE = plsobject.AVE()
@@ -36,18 +37,20 @@ class PyLSpmHTML(object):
                 <thead>
                     <tr>"""
 
-        linhas = ['Scheme', 'Regression', 'Latent Variables', 'Manifests', 'Observations', 'SRMR']
-        conteudo = [(self.scheme), self.regression, len(self.path_matrix), len(self.outer_loadings), len(self.fscores), round(self.srmr,3)]
+        linhas = ['Scheme', 'Regression', 'Latent Variables',
+                  'Manifests', 'Observations', 'SRMR']
+        conteudo = [(self.scheme), self.regression, len(self.path_matrix), len(
+            self.outer_loadings), len(self.fscores), round(self.srmr, 3)]
 
-        print_matrix+="""</tr></thead><tbody>"""
+        print_matrix += """</tr></thead><tbody>"""
 
         for i in range(len(linhas)):
-            print_matrix+="<tr>"
-            print_matrix+="<td>" + str(linhas[i]) + "</td>"
-            print_matrix+="<td>" + str(conteudo[i]) + "</td>"
-            print_matrix+="</tr>"
+            print_matrix += "<tr>"
+            print_matrix += "<td>" + str(linhas[i]) + "</td>"
+            print_matrix += "<td>" + str(conteudo[i]) + "</td>"
+            print_matrix += "</tr>"
 
-        print_matrix+="""</tbody>
+        print_matrix += """</tbody>
             </table></div>"""
 
         return print_matrix
@@ -65,23 +68,58 @@ class PyLSpmHTML(object):
         linhas = matrix.index.values
         conteudo = matrix.values
 
-        print_matrix+="<th></th>"
+        print_matrix += "<th></th>"
         for i in range(len(colunas)):
-            print_matrix+="<th>" + str(colunas[i]) + "</th>"
+            print_matrix += "<th>" + str(colunas[i]) + "</th>"
 
-        print_matrix+="""</tr></thead><tbody>"""
+        print_matrix += """</tr></thead><tbody>"""
 
         for i in range(len(linhas)):
-            print_matrix+="<tr>"
-            print_matrix+="<td>" + str(linhas[i]) + "</td>"
+            print_matrix += "<tr>"
+            print_matrix += "<td>" + str(linhas[i]) + "</td>"
             for j in range(len(colunas)):
                 if (str(conteudo[i][j]) == '0.0'):
-                    print_matrix+="<td></td>"
+                    print_matrix += "<td></td>"
                 else:
-                    print_matrix+="<td>" + str(round(conteudo[i][j], 3)) + "</td>"
-            print_matrix+="</tr>"
+                    print_matrix += "<td>" + \
+                        str(round(conteudo[i][j], 3)) + "</td>"
+            print_matrix += "</tr>"
 
-        print_matrix+="""</tbody>
+        print_matrix += """</tbody>
+            </table></div>"""
+
+        return print_matrix
+
+    def geraTableStr(self, matrix, titulo, link):
+
+        print_matrix = """
+        <div id=""" + link + """>
+        <h3>""" + titulo + """</h3>
+            <table class="table table-striped table-condensed">
+                <thead>
+                    <tr>"""
+
+        colunas = matrix.columns.values
+        linhas = matrix.index.values
+        conteudo = matrix.values
+
+        print_matrix += "<th></th>"
+        for i in range(len(colunas)):
+            print_matrix += "<th>" + str(colunas[i]) + "</th>"
+
+        print_matrix += """</tr></thead><tbody>"""
+
+        for i in range(len(linhas)):
+            print_matrix += "<tr>"
+            print_matrix += "<td>" + str(linhas[i]) + "</td>"
+            for j in range(len(colunas)):
+                if (str(conteudo[i][j]) == '0.0 0.0'):
+                    print_matrix += "<td></td>"
+                else:
+                    print_matrix += "<td>" + str(conteudo[i][j]) + "</td>"
+            print_matrix += "</tr>"
+
+        print_matrix += """</tbody>
             </table></div>"""
 
         return print_matrix
@@ -100,22 +138,25 @@ class PyLSpmHTML(object):
         conteudo2 = matrix2.values
         conteudo3 = matrix3.values
 
-        print_matrix+="<th></th>"
-        print_matrix+="<th>Cronbach Alpha</th>"
-        print_matrix+="<th>Composite Reliability</th>"
-        print_matrix+="<th>&rho;A</th>"
+        print_matrix += "<th></th>"
+        print_matrix += "<th>Cronbach Alpha</th>"
+        print_matrix += "<th>Composite Reliability</th>"
+        print_matrix += "<th>&rho;A</th>"
 
-        print_matrix+="""</tr></thead><tbody>"""
+        print_matrix += """</tr></thead><tbody>"""
 
         for i in range(len(linhas)):
-            print_matrix+="<tr>"
-            print_matrix+="<td>" + str(linhas[i]) + "</td>"
-            print_matrix+="<td>" + str(round(float(conteudo[i]), 3)) + "</td>"
-            print_matrix+="<td>" + str(round(float(conteudo2[i]), 3)) + "</td>"
-            print_matrix+="<td>" + str(round(float(conteudo3[i]), 3)) + "</td>"
-            print_matrix+="</tr>"
+            print_matrix += "<tr>"
+            print_matrix += "<td>" + str(linhas[i]) + "</td>"
+            print_matrix += "<td>" + \
+                str(round(float(conteudo[i]), 3)) + "</td>"
+            print_matrix += "<td>" + \
+                str(round(float(conteudo2[i]), 3)) + "</td>"
+            print_matrix += "<td>" + \
+                str(round(float(conteudo3[i]), 3)) + "</td>"
+            print_matrix += "</tr>"
 
-        print_matrix+="""</tbody>
+        print_matrix += """</tbody>
             </table></div>"""
 
         return print_matrix
@@ -132,18 +173,19 @@ class PyLSpmHTML(object):
         linhas = matrix.index.values
         conteudo = matrix.values
 
-        print_matrix+="<th></th>"
-        print_matrix+="<th>" + titulo + "</th>"
+        print_matrix += "<th></th>"
+        print_matrix += "<th>" + titulo + "</th>"
 
-        print_matrix+="""</tr></thead><tbody>"""
+        print_matrix += """</tr></thead><tbody>"""
 
         for i in range(len(linhas)):
-            print_matrix+="<tr>"
-            print_matrix+="<td>" + str(linhas[i]) + "</td>"
-            print_matrix+="<td>" + str(round(float(conteudo[i]), 3)) + "</td>"
-            print_matrix+="</tr>"
+            print_matrix += "<tr>"
+            print_matrix += "<td>" + str(linhas[i]) + "</td>"
+            print_matrix += "<td>" + \
+                str(round(float(conteudo[i]), 3)) + "</td>"
+            print_matrix += "</tr>"
 
-        print_matrix+="""</tbody>
+        print_matrix += """</tbody>
             </table></div>"""
 
         return print_matrix
@@ -220,33 +262,47 @@ class PyLSpmHTML(object):
 
         info = self.geraInfo()
 
-        path_matrix = self.geraTable(self.path_matrix, 'Path Coefficients', 'path_matrix')
+        path_matrix = self.geraTable(
+            self.path_matrix, 'Path Coefficients', 'path_matrix')
 
-        if(self.regression=='fuzzy'):
-            path_matrix_low = self.geraTable(self.path_matrix_low, 'Low Path Coefficients', 'path_matrix_low')
-            path_matrix_high = self.geraTable(self.path_matrix_high, 'High Path Coefficients', 'path_matrix_high')
+        if(self.regression == 'fuzzy'):
+            path_matrix_low = self.geraTable(
+                self.path_matrix_low, 'Low Path Coefficients', 'path_matrix_low')
+            path_matrix_high = self.geraTable(
+                self.path_matrix_high, 'High Path Coefficients', 'path_matrix_high')
+            path_matrix_range = self.geraTableStr(
+                self.path_matrix_range, 'Path Coefficients Range', 'path_matrix_range')
 
-        indirect_effects = self.geraTable(self.indirect_effects, 'Indirect Effects', 'indirect_effects')
-        total_effects = self.geraTable(self.total_effects, 'Total Effects', 'total_effects')
+        indirect_effects = self.geraTable(
+            self.indirect_effects, 'Indirect Effects', 'indirect_effects')
+        total_effects = self.geraTable(
+            self.total_effects, 'Total Effects', 'total_effects')
 
         r2 = self.gerasingleTable(self.r2, 'R-Squared', 'r2')
-        AVE = self.gerasingleTable(self.AVE, 'Average Variance Extracted', 'AVE')
+        AVE = self.gerasingleTable(
+            self.AVE, 'Average Variance Extracted', 'AVE')
 
-        corLVs = self.geraTable(self.corLVs, 'Latent Variables Correlations', 'corLVs')
-        htmt = self.geraTable(self.htmt, 'Heterotrait-Monotrait Ratio of Correlations (HTMT)', 'htmt')
-        outer_loadings = self.geraTable(self.outer_loadings, 'Loadings', 'outer_loadings')
-        comunalidades = self.geraTable(self.comunalidades, 'Communalities', 'comunalidades')
+        corLVs = self.geraTable(
+            self.corLVs, 'Latent Variables Correlations', 'corLVs')
+        htmt = self.geraTable(
+            self.htmt, 'Heterotrait-Monotrait Ratio of Correlations (HTMT)', 'htmt')
+        outer_loadings = self.geraTable(
+            self.outer_loadings, 'Loadings', 'outer_loadings')
+        comunalidades = self.geraTable(
+            self.comunalidades, 'Communalities', 'comunalidades')
         xloads = self.geraTable(self.xloads, 'Crossloadings', 'xloads')
         fscores = self.geraTable(self.fscores, 'Scores', 'fscores')
-        outer_weights = self.geraTable(self.outer_weights, 'Weigths', 'outer_weights')
+        outer_weights = self.geraTable(
+            self.outer_weights, 'Weigths', 'outer_weights')
 
-        empirical = self.geraTable(self.empirical, 'Empirical Correlation Matrix', 'empirical')
-        implied = self.geraTable(self.implied, 'Model Implied Correlation Matrix', 'implied')
+        empirical = self.geraTable(
+            self.empirical, 'Empirical Correlation Matrix', 'empirical')
+        implied = self.geraTable(
+            self.implied, 'Model Implied Correlation Matrix', 'implied')
 
         reliability = self.geraReliabilityTable(self.alpha, self.cr, self.rhoA)
 
-
-        body="""<body data-spy="scroll" data-target="#myScrollspy" data-offset="60">
+        body = """<body data-spy="scroll" data-target="#myScrollspy" data-offset="60">
         <nav class="navbar navbar-inverse navbar-fixed-top"><div class="container-fluid"><div class="navbar-header"><div class="navbar-brand">PyLS-PM</div></div></div></nav>
         <div class="container-fluid">
         <div class="row">
@@ -261,14 +317,15 @@ class PyLSpmHTML(object):
         <li class=""><a align="center" href="#inner"><b>Inner Model</b></a></li>
         <li class=""><a href="#path_matrix">Path Coefficients</a></li>"""
 
-        if(self.regression=='fuzzy'):
-            body+="""
+        if(self.regression == 'fuzzy'):
+            body += """
             <li class=""><a href="#path_matrix_low">Low Path Coefficients</a></li>
-            <li class=""><a href="#path_matrix_high">High Path Coefficients</a></li>"""
+            <li class=""><a href="#path_matrix_high">High Path Coefficients</a></li>
+            <li class=""><a href="#path_matrix_range">Path Coefficients Range</a></li>"""
         else:
-            body+="""<li class=""><a href="#r2">R-Squared</a></li>"""
+            body += """<li class=""><a href="#r2">R-Squared</a></li>"""
 
-        body+="""<li class=""><a href="#indirect_effects">Indirect Effects</a></li>
+        body += """<li class=""><a href="#indirect_effects">Indirect Effects</a></li>
         <li class=""><a href="#total_effects">Total Effects</a></li>
         <li class=""><a href="#AVE">Average Variance Extracted</a></li>
         <li class=""><a href="#corLVs">Latent Variables Correlations</a></li>
@@ -287,12 +344,11 @@ class PyLSpmHTML(object):
         </div>
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 results">"""
 
-
         rodape = """</div></div></div>
         </body>
         </html>"""
 
-        f = open('results.html','w', encoding='utf-8')
+        f = open('results.html', 'w', encoding='utf-8')
         f.write(message)
         f.write(body)
 
@@ -304,9 +360,10 @@ class PyLSpmHTML(object):
         f.write('<h1 id="inner">Inner Model</h1><hr>')
         f.write(path_matrix)
 
-        if(self.regression=='fuzzy'):
+        if(self.regression == 'fuzzy'):
             f.write(path_matrix_low)
             f.write(path_matrix_high)
+            f.write(path_matrix_range)
         else:
             f.write(r2)
         f.write(indirect_effects)
