@@ -7,6 +7,7 @@ import pandas as pd
 import copy
 import scipy.stats
 
+import matplotlib
 from matplotlib import pyplot as plt
 from scipy.cluster.hierarchy import dendrogram, linkage
 from scipy.cluster.hierarchy import fcluster
@@ -38,7 +39,22 @@ if __name__ == '__main__':
     if (boot == 0):
 
         tese = PyLSpm(data, lvmodel, mvmodel, scheme, regression, 0, 100)
-#        Z = linkage(tese.predict().values, 'ward')
+        tese.sampleSize()
+
+        font = {'family' : 'Times New Roman',
+                'weight' : 'normal',
+                'size'   : 14}
+
+        matplotlib.rc('font', **font)
+
+        plt.plot(tese.sampleSize()[0], tese.sampleSize()[1], 'o-')
+        plt.xlabel('Potência')
+        plt.ylabel('Tamanho da Amostra')
+        plt.grid(True)
+        plt.show()
+#        print(tese.frequency())
+#        print(tese.dataInfo())
+#        Z = linkage(tese.fscores, 'ward')
 #        plt.figure(figsize=(25, 10))
 #        plt.title('Dendograma de Agrupamento Hierárquico')
 #        plt.xlabel('Amostra')
@@ -58,6 +74,8 @@ if __name__ == '__main__':
 #        impa = tese.impa()
 #        print(impa[0])
 #        print(impa[2].T)
+
+#        print(tese.predict())
 
         print(tese.path_matrix)
         imprime = PyLSpmHTML(tese)

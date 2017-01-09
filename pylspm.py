@@ -15,12 +15,79 @@ import scipy.linalg
 
 class PyLSpm(object):
 
+    def sampleSize(self):
+        r = 0.3
+        alpha = 0.05
+#        power=0.9
+
+        C = 0.5 * np.log((1 + r) / (1 - r))
+
+        Za = scipy.stats.norm.ppf(1 - (0.05 / 2))
+
+        sizeArray = []
+        powerArray = []
+
+        power = 0.5
+        for i in range(50, 100, 1):
+            power = i / 100
+            powerArray.append(power)
+
+            Zb = scipy.stats.norm.ppf(1 - power)
+            N = abs((Za - Zb) / C)**2 + 3
+
+            sizeArray.append(N)
+
+        return [powerArray, sizeArray]
+
     def normaliza(self, X):
         mean_ = np.mean(X, 0)
         scale_ = np.std(X, 0)
         X = X - mean_
         X = X / scale_
         return X
+
+    def frequency(self):
+        frequencia = pd.DataFrame(0, index=range(1, 6), columns=self.manifests)
+
+        for i in range(len(self.manifests)):
+            frequencia[self.manifests[i]] = self.data[
+                self.manifests[i]].value_counts()
+
+        frequencia = frequencia / len(self.data) * 100
+        frequencia = frequencia.reindex_axis(
+            sorted(frequencia.columns), axis=1)
+        frequencia = frequencia.fillna(0).T
+        frequencia = frequencia[(frequencia.T != 0).any()]
+
+        maximo = pd.DataFrame.max(pd.DataFrame.max(self.data, axis=0))
+
+        if int(maximo) & 1:
+            neg = np.sum(frequencia.ix[:, 1: ((maximo - 1) / 2)], axis=1)
+            ind = frequencia.ix[:, ((maximo + 1) / 2)]
+            pos = np.sum(
+                frequencia.ix[:, (((maximo + 1) / 2) + 1):maximo], axis=1)
+
+        else:
+            neg = np.sum(frequencia.ix[:, 1:((maximo) / 2)], axis=1)
+            ind = 0
+            pos = np.sum(frequencia.ix[:, (((maximo) / 2) + 1):maximo], axis=1)
+
+        frequencia['Neg.'] = pd.Series(
+            neg, index=frequencia.index)
+        frequencia['Ind.'] = pd.Series(
+            ind, index=frequencia.index)
+        frequencia['Pos.'] = pd.Series(
+            pos, index=frequencia.index)
+
+#        print(np.sum(frequencia.ix[:, 1:(maximo/2)], axis=1))
+#        print(np.sum(frequencia.ix[:, (maximo/2):maximo], axis=1))
+
+        return frequencia
+
+    def dataInfo(self):
+        sd_ = np.std(self.data, 0)
+        mean_ = np.mean(self.data, 0)
+        return [mean_, sd_]
 
     def predict(self, method='exogenous'):
         exoVar = []
@@ -37,12 +104,8 @@ class PyLSpm(object):
             Beta = self.path_matrix.ix[endoVar][endoVar]
             Gamma = self.path_matrix.ix[endoVar][exoVar]
 
-            beta = []
-            for i in range(self.lenlatent):
-                if (self.latent[i] in exoVar):
-                    beta.append(1)
-                else:
-                    beta.append(0)
+            beta = [1 if (self.latent[i] in exoVar)
+                    else 0 for i in range(self.lenlatent)]
 
             beta = np.diag(beta)
 
@@ -70,7 +133,6 @@ class PyLSpm(object):
         partial_ = pd.DataFrame.dot(self.outer_weights, beta.T.values)
         prediction = pd.DataFrame.dot(partial_, self.outer_loadings.T.values)
         predicted = pd.DataFrame.dot(self.data, prediction)
-#        predicted = pd.DataFrame(predicted)
         predicted.columns = self.manifests
 
         mean_ = np.mean(self.data, 0)
@@ -289,14 +351,11 @@ class PyLSpm(object):
         self.data_ = data_
 
         outer_weights = pd.DataFrame(0, index=manifests, columns=latent)
-
         for i in range(len(Variables)):
             outer_weights[Variables['latent'][i]][
                 Variables['measurement'][i]] = 1
 
         inner_paths = pd.DataFrame(0, index=latent, columns=latent)
-
-        indirect_effects = inner_paths.copy()
 
         for i in range(len(LVariables)):
             inner_paths[LVariables['source'][i]][LVariables['target'][i]] = 1
@@ -379,8 +438,8 @@ class PyLSpm(object):
                     inv_ = (np.linalg.inv(lin_))
 
                     b = list(fscores.ix[:, latent[i]])
-                    cor_ = [sp.stats.pearsonr(list(a.ix[:, j]), b)[
-                        0] for j in range(len(a.columns))]
+                    cor_ = [sp.stats.pearsonr(list(a.ix[:, j]), b)[0]
+                            for j in range(len(a.columns))]
 
                     myindex = Variables['measurement'][
                         Variables['latent'] == latent[i]]
@@ -447,8 +506,11 @@ class PyLSpm(object):
                 path_matrix.ix[dependant[i], independant] = coef
 
             elif (self.regression == 'fuzzy'):
-                ac, awL, awR = otimiza(dependant_, independant_, len(
-                    independant_.columns), self.h)
+                size = len(independant_.columns)
+                ac, awL, awR = otimiza(dependant_, independant_, size, self.h)
+                ac, awL, awR = (ac[0], awL[0], awR[0]) if (
+                    size == 1) else (ac, awL, awR)
+
                 path_matrix.ix[dependant[i], independant] = ac
                 path_matrix_low.ix[dependant[i], independant] = awL
                 path_matrix_high.ix[dependant[i], independant] = awR
@@ -463,6 +525,8 @@ class PyLSpm(object):
         r2 = r2.T
 
         # Path Effects
+
+        indirect_effects = pd.DataFrame(0, index=latent, columns=latent)
 
         path_effects = [None] * self.lenlatent
         path_effects[0] = path_matrix

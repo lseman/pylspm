@@ -27,6 +27,9 @@ class PyLSpmHTML(object):
         self.regression = plsobject.regression
 
         self.srmr = plsobject.srmr()
+        self.frequency = plsobject.frequency()
+        self.mean = plsobject.dataInfo()[0]
+        self.sd = plsobject.dataInfo()[1]
 
     def geraInfo(self):
 
@@ -154,6 +157,39 @@ class PyLSpmHTML(object):
                 str(round(float(conteudo2[i]), 3)) + "</td>"
             print_matrix += "<td>" + \
                 str(round(float(conteudo3[i]), 3)) + "</td>"
+            print_matrix += "</tr>"
+
+        print_matrix += """</tbody>
+            </table></div>"""
+
+        return print_matrix
+
+    def geraDataInfoTable(self, matrix, matrix2):
+
+        print_matrix = """
+        <div id="datainfo">
+        <h3>Population Info</h3>
+            <table class="table table-striped table-condensed">
+                <thead>
+                    <tr>"""
+
+        linhas = matrix.index.values
+        conteudo = matrix.values
+        conteudo2 = matrix2.values
+
+        print_matrix += "<th></th>"
+        print_matrix += "<th>Mean</th>"
+        print_matrix += "<th>Standard Deviation</th>"
+
+        print_matrix += """</tr></thead><tbody>"""
+
+        for i in range(len(linhas)):
+            print_matrix += "<tr>"
+            print_matrix += "<td>" + str(linhas[i]) + "</td>"
+            print_matrix += "<td>" + \
+                str(round(float(conteudo[i]), 3)) + "</td>"
+            print_matrix += "<td>" + \
+                str(round(float(conteudo2[i]), 3)) + "</td>"
             print_matrix += "</tr>"
 
         print_matrix += """</tbody>
@@ -300,7 +336,12 @@ class PyLSpmHTML(object):
         implied = self.geraTable(
             self.implied, 'Model Implied Correlation Matrix', 'implied')
 
+        frequency = self.geraTable(
+            self.frequency, 'Frequency Table', 'frequency')
+
         reliability = self.geraReliabilityTable(self.alpha, self.cr, self.rhoA)
+
+        datainfo = self.geraDataInfoTable(self.mean, self.sd)
 
         body = """<body data-spy="scroll" data-target="#myScrollspy" data-offset="60">
         <nav class="navbar navbar-inverse navbar-fixed-top"><div class="container-fluid"><div class="navbar-header"><div class="navbar-brand">PyLS-PM</div></div></div></nav>
@@ -340,6 +381,7 @@ class PyLSpmHTML(object):
         <li class=""><a href="#fscores">Scores</a></li>
         <li class=""><a href="#empirical">Empirical Correlation Matrix</a></li>
         <li class=""><a href="#implied">Model Implied Correlation Matrix</a></li>
+        <li class=""><a align="center" href="#datainfo"><b>Data Info</b></a></li>   
         </ul>
         </div>
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 results">"""
@@ -382,5 +424,8 @@ class PyLSpmHTML(object):
         f.write(fscores)
 #        f.write(empirical)
 #        f.write(implied)
+        f.write('<h1 id="datainfo">Data Info</h1><hr>')
+        f.write(frequency)
+        f.write(datainfo)
         f.write(rodape)
         f.close()
