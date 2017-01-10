@@ -21,14 +21,14 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    boot = 0
+    boot = 3
     nrboot = 20
     cores = 8
 
     method = 'percentile'
-    data = 'dados4.csv'
+    data = 'dados2G.csv'
     lvmodel = 'lvmodel.csv'
-    mvmodel = 'mvmodel.csv'
+    mvmodel = 'mvmodel_.csv'
     scheme = 'path'
     regression = 'ols'
 
@@ -41,9 +41,9 @@ if __name__ == '__main__':
         tese = PyLSpm(data, lvmodel, mvmodel, scheme, regression, 0, 100)
         tese.sampleSize()
 
-        font = {'family' : 'Times New Roman',
-                'weight' : 'normal',
-                'size'   : 14}
+        font = {'family': 'Times New Roman',
+                'weight': 'normal',
+                'size': 14}
 
         matplotlib.rc('font', **font)
 
@@ -213,8 +213,8 @@ if __name__ == '__main__':
 
             return [mean_, deviation_]
 
-        data1 = (data_.loc[data_['SEM'] == 4]).drop('SEM', axis=1)
-        data2 = (data_.loc[data_['SEM'] == 0]).drop('SEM', axis=1)
+        data1 = (data_.loc[data_['SEM'] == 0]).drop('SEM', axis=1)
+        data2 = (data_.loc[data_['SEM'] == 1]).drop('SEM', axis=1)
 
         estimData1 = PyLSboot(nrboot, cores, data1, lvmodel,
                               mvmodel, scheme, regression, 0, 100)
@@ -233,26 +233,49 @@ if __name__ == '__main__':
                              columns=range(len(path_diff)))
         pval = pd.DataFrame(0, index=range(len(path_diff)),
                             columns=range(len(path_diff)))
+        df = pd.DataFrame(0, index=range(len(path_diff)),
+                          columns=range(len(path_diff)))
 
         SE1 = estimado1[1]
         SE2 = estimado2[1]
 
         ng1 = len(data1)
         ng2 = len(data2)
-        k1 = ((ng1 - 1) ^ 2) / (ng1 + ng2 - 2)
-        k2 = ((ng2 - 1) ^ 2) / (ng1 + ng2 - 2)
+        k1 = ((ng1 - 1) ** 2) / (ng1 + ng2 - 2)
+        k2 = ((ng2 - 1) ** 2) / (ng1 + ng2 - 2)
         k3 = np.sqrt(1 / ng1 + 1 / ng2)
 
-        for i in range(len((path_diff))):
-            for j in range(len((path_diff))):
-                tStat.ix[i, j] = path_diff[i, j] / \
-                    (np.sqrt(k1 * SE1[i, j] * SE2[i, j] + k2) * k3)
-                if (tStat.ix[i, j] != 0):
-                    pval.ix[i, j] = scipy.stats.t.sf(
-                        tStat.ix[i, j], ng1 + ng2 - 2)
+        method = 'non-parametric'
+
+        # Parametric
+
+        if method == 'parametric':
+
+            for i in range(len((path_diff))):
+                for j in range(len((path_diff))):
+                    tStat.ix[i, j] = path_diff[i, j] / \
+                        (np.sqrt(k1 * SE1[i, j] + k2 * SE2[i, j]) * k3)
+                    if (tStat.ix[i, j] != 0):
+                        pval.ix[i, j] = scipy.stats.t.sf(
+                            tStat.ix[i, j], ng1 + ng2 - 2)
+
+        # Non-Parametric
+
+        if method == 'non-parametric':
+
+            for i in range(len((path_diff))):
+                for j in range(len((path_diff))):
+                    tStat.ix[i, j] = path_diff[
+                        i, j] / np.sqrt(((ng1 - 1) / ng1) * SE1[i, j] + ((ng2 - 1) / ng2) * SE2[i, j])
+                    if (tStat.ix[i, j] != 0):
+                        df.ix[i, j] = np.round(((((((ng1 - 1) / ng1) * SE1[i, j] + ((ng2 - 1) / ng2) * SE2[i, j])**2) / (
+                            ((ng1 - 1) / ng1**2) * SE1[i, j]**2 + ((ng2 - 1) / ng2**2) * SE2[i, j]**2)) - 2), 0)
+                        pval.ix[i, j] = scipy.stats.t.sf(
+                            tStat.ix[i, j], df.ix[i, j])
 
         print(tStat)
         print(pval)
+        print(df)
 
         print('Paths')
         print(estimado1[0])

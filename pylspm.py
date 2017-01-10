@@ -79,9 +79,6 @@ class PyLSpm(object):
         frequencia['Pos.'] = pd.Series(
             pos, index=frequencia.index)
 
-#        print(np.sum(frequencia.ix[:, 1:(maximo/2)], axis=1))
-#        print(np.sum(frequencia.ix[:, (maximo/2):maximo], axis=1))
-
         return frequencia
 
     def dataInfo(self):
