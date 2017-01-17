@@ -20,13 +20,13 @@ def otimiza(y, x, size, h, method='fuzzy'):
 
     if method == 'fuzzy':
 
-        k1 = 10  # central
-        k2 = 1  # periférica
+        k1 = 1  # central
+        k2 = 10  # periférica
 
         if size == 1:
             k2b = 4 / n
         else:
-            k2b = 1
+            k2b = 4 / n
 
     elif method == 'ols':
 
@@ -43,26 +43,28 @@ def otimiza(y, x, size, h, method='fuzzy'):
                                      for i in range(n))
 
                        + k2 * quicksum((np.dot(x[:, j], x[:, j].transpose()) *
-                                        (awL[j + 1] * awL[j + 1] + awR[j + 1] + awR[j + 1]))
+                                        (awL[j + 1] * awL[j + 1] + awR[j + 1] * awR[j + 1]))
                                        for j in range(size)
                                        ) +
 
-                       + k2b * n * (awL[0] * awL[0] + awR[0] * awR[0]), GRB.MINIMIZE)
+                       + k2 * n * (awL[0] * awL[0] + awR[0] * awR[0]), GRB.MINIMIZE)
 
     for i in range(0, n):
-        model.addConstr(ac[0] +
+        model.addConstr(n*ac[0] +
                         quicksum((ac[j + 1] * x[i, j])
                                  for j in range(size))
                         - (1 - h) * (awL[0] + quicksum((abs(x[i, j]) * awL[j + 1])
                                                        for j in range(size))) <= y[i])
 
     for i in range(0, n):
-        model.addConstr(ac[0] +
+        model.addConstr(n*ac[0] +
                         quicksum((ac[j + 1] * x[i, j])
                                  for j in range(size))
                         + (1 - h) * (awR[0] + quicksum((abs(x[i, j]) * awR[j + 1])
                                                        for j in range(size))) >= y[i])
 
+    print(awL)
+    print(awR)
     model.optimize()
     return [ac[i + 1].x for i in range(size)], [(ac[i + 1].x - awL[i + 1].x) for i in range(size)], [(ac[i + 1].x + awR[i + 1].x) for i in range(size)]
 

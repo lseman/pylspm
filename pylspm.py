@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import scipy as sp
 import scipy.stats
-from qpLRlib3 import otimiza
+from qpLRlib4 import otimiza
 import statsmodels.api as sm
 import scipy.linalg
 
@@ -45,6 +45,41 @@ class PyLSpm(object):
         X = X - mean_
         X = X / scale_
         return X
+
+    def residuals(self):
+        exoVar = []
+        endoVar = []
+
+        outer_residuals = self.data.copy()
+
+        for i in range(self.lenlatent):
+            if(self.latent[i] in self.LVariables['target'].values):
+                endoVar.append(self.latent[i])
+            else:
+                exoVar.append(self.latent[i])
+
+        for i in range(self.lenlatent):
+            outer_ = self.fscores.ix[:,i].values
+            block = self.data_[self.Variables['measurement']
+                               [self.Variables['latent'] == self.latent[i]]]
+            block = block.columns.values
+            loadings = self.outer_loadings.ix[block][self.latent[i]].values
+
+            outer_ = outer_.reshape(len(outer_), 1)
+            loadings = loadings.reshape(len(loadings), 1)
+
+            outer_ = np.dot(outer_, loadings.T)
+
+            outer_residuals.ix[:, block] = self.data_.ix[:, block] - outer_
+
+        outer_residuals = self.data_ - pd.DataFrame.dot(self.fscores,self.outer_loadings.T)
+
+        inner_residuals = self.fscores[endoVar]
+        inner_ = pd.DataFrame.dot(self.fscores, self.path_matrix.ix[endoVar].T)
+        inner_residuals = self.fscores[endoVar] - inner_
+
+        residuals = pd.concat([outer_residuals, inner_residuals], axis=1)
+        return residuals
 
     def frequency(self):
         frequencia = pd.DataFrame(0, index=range(1, 6), columns=self.manifests)
@@ -142,7 +177,7 @@ class PyLSpm(object):
         return predictedData
 
     def srmr(self):
-        srmr = (pd.DataFrame.corr(self.data_) - self.implied())
+        srmr = (pd.DataFrame.corr(self.data) - self.implied())
         srmr = np.sqrt(((srmr.values) ** 2).mean())
         return srmr
 
@@ -358,6 +393,7 @@ class PyLSpm(object):
             inner_paths[LVariables['source'][i]][LVariables['target'][i]] = 1
 
         path_matrix = inner_paths.copy()
+        self.inner_model = inner_paths.copy()
 
         # LOOP
         for iterations in range(0, self.maximo):
@@ -497,13 +533,20 @@ class PyLSpm(object):
             if (self.regression == 'ols'):
                 # Path Normal
                 coef, resid = np.linalg.lstsq(independant_, dependant_)[:2]
+#                model = sm.OLS(dependant_, independant_)
+#                results = model.fit()
+#                print(results.summary())
+#                r2[dependant[i]] = results.rsquared
+
                 r2[dependant[i]] = 1 - resid / \
                     (dependant_.size * dependant_.var())
 
                 path_matrix.ix[dependant[i], independant] = coef
+#                pvalues.ix[dependant[i], independant] = results.pvalues
 
             elif (self.regression == 'fuzzy'):
                 size = len(independant_.columns)
+
                 ac, awL, awR = otimiza(dependant_, independant_, size, self.h)
                 ac, awL, awR = (ac[0], awL[0], awR[0]) if (
                     size == 1) else (ac, awL, awR)

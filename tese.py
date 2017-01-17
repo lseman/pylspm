@@ -6,6 +6,7 @@ from numpy import inf
 import pandas as pd
 import copy
 import scipy.stats
+from scipy.stats import norm
 
 import matplotlib
 from matplotlib import pyplot as plt
@@ -21,14 +22,14 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    boot = 3
-    nrboot = 20
+    boot = 0
+    nrboot = 30
     cores = 8
 
     method = 'percentile'
-    data = 'dados2G.csv'
-    lvmodel = 'lvmodel.csv'
-    mvmodel = 'mvmodel_.csv'
+    data = 'dados_reag.csv'
+    lvmodel = 'lvnew.csv'
+    mvmodel = 'mvnew_.csv'
     scheme = 'path'
     regression = 'ols'
 
@@ -39,33 +40,31 @@ if __name__ == '__main__':
     if (boot == 0):
 
         tese = PyLSpm(data, lvmodel, mvmodel, scheme, regression, 0, 100)
-        tese.sampleSize()
+#        tese.sampleSize()
 
-        font = {'family': 'Times New Roman',
-                'weight': 'normal',
-                'size': 14}
-
-        matplotlib.rc('font', **font)
-
-        plt.plot(tese.sampleSize()[0], tese.sampleSize()[1], 'o-')
-        plt.xlabel('Potência')
-        plt.ylabel('Tamanho da Amostra')
-        plt.grid(True)
-        plt.show()
-#        print(tese.frequency())
-#        print(tese.dataInfo())
-#        Z = linkage(tese.fscores, 'ward')
-#        plt.figure(figsize=(25, 10))
-#        plt.title('Dendograma de Agrupamento Hierárquico')
-#        plt.xlabel('Amostra')
-#        plt.ylabel('Distância')
-#        dendrogram(
-#            Z,
-#            leaf_rotation=90.,  # rotates the x axis labels
-#            leaf_font_size=8.,  # font size for the x axis labels
-#        )
+#        font = {'family': 'Times New Roman',
+#                'weight': 'normal',
+#                'size': 14}
+#
+#        matplotlib.rc('font', **font)
+#
+#        plt.plot(tese.sampleSize()[0], tese.sampleSize()[1], 'o-')
+#        plt.xlabel('Potência')
+#        plt.ylabel('Tamanho da Amostra')
+#        plt.grid(True)
 #        plt.show()
 
+        Z = linkage(tese.residuals(), 'ward')
+        plt.figure(figsize=(25, 10))
+        plt.title('Dendograma de Agrupamento Hierárquico')
+        plt.xlabel('Amostra')
+        plt.ylabel('Distância')
+        dendrogram(
+            Z,
+            leaf_rotation=90.,  # rotates the x axis labels
+            leaf_font_size=8.,  # font size for the x axis la0bels
+        )
+        plt.show()
 #        max_d = 10
 #        clusters = fcluster(Z, max_d, criterion='distance')
 #        print(clusters)
@@ -77,14 +76,18 @@ if __name__ == '__main__':
 
 #        print(tese.predict())
 
-        print(tese.path_matrix)
+#        print(tese.path_matrix)
         imprime = PyLSpmHTML(tese)
         imprime.generate()
+#        print(tese.pvalues)
 
     elif (boot == 1):
         tese = PyLSboot(nrboot, cores, data_, lvmodel,
                         mvmodel, scheme, regression, 0, 100)
         resultados = tese.boot()
+
+        default = PyLSpm(data_, lvmodel, mvmodel, scheme,
+                         regression, 0, 100).path_matrix.values
 
         current = list(filter(None.__ne__, resultados))
         current = np.sort(current, axis=0)
@@ -100,6 +103,16 @@ if __name__ == '__main__':
                 print(np.round(np.percentile(current_, 2.5, axis=0), 4))
                 print('CI 97.5')
                 print(np.round(np.percentile(current_, 97.5, axis=0), 4))
+
+                print('t-value')
+                tstat = np.nan_to_num(np.mean(current_, axis=0) /
+                                      np.std(current_, axis=0, ddof=1))
+                print(tstat)
+
+                print('p-value')
+                pvalue = (scipy.stats.t.sf(
+                    tstat, len(current_) - 1))
+                print(pvalue)
 
         elif (method == 'bca'):
 
@@ -280,3 +293,12 @@ if __name__ == '__main__':
         print('Paths')
         print(estimado1[0])
         print(estimado2[0])
+
+    elif (boot == 4):
+
+        data1 = (data_.loc[data_['SEM'] == 0]).drop('SEM', axis=1).values
+        data2 = (data_.loc[data_['SEM'] == 1]).drop('SEM', axis=1).values
+
+        print(data1)
+
+        levene = scipy.stats.levene(data1, data2)

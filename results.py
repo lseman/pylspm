@@ -422,8 +422,8 @@ class PyLSpmHTML(object):
 
         f.write('<h1 id="others">Others</h1><hr>')
         f.write(fscores)
-#        f.write(empirical)
-#        f.write(implied)
+        f.write(empirical)
+        f.write(implied)
         f.write('<h1 id="datainfo">Data Info</h1><hr>')
         f.write(frequency)
         f.write(datainfo)
