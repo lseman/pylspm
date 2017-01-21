@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import scipy as sp
 import scipy.stats
-from qpLRlib4 import otimiza
+from qpLRlib4 import otimiza, plotaIC
 import statsmodels.api as sm
 import scipy.linalg
 
@@ -222,6 +222,19 @@ class PyLSpm(object):
 
         composite = composite.T
         return(composite)
+
+    def r2adjusted(self):
+        n = len(self.data_)
+        r2 = self.r2.values
+
+        r2adjusted = pd.DataFrame(0, index=np.arange(1), columns=self.latent)
+
+        for i in range(self.lenlatent):
+            p = sum(self.LVariables['target'] == self.latent[i])
+            r2adjusted[self.latent[i]] = r2[i] - (p*(1-r2[i]))/(n-p-1)
+
+        return r2adjusted.T
+
 
     def htmt(self):
 
@@ -546,8 +559,10 @@ class PyLSpm(object):
 
             elif (self.regression == 'fuzzy'):
                 size = len(independant_.columns)
-
                 ac, awL, awR = otimiza(dependant_, independant_, size, self.h)
+
+#                plotaIC(dependant_, independant_, size)
+
                 ac, awL, awR = (ac[0], awL[0], awR[0]) if (
                     size == 1) else (ac, awL, awR)
 

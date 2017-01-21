@@ -63,9 +63,9 @@ def otimiza(y, x, size, h, method='fuzzy'):
                         + (1 - h) * (awR[0] + quicksum((abs(x[i, j]) * awR[j + 1])
                                                        for j in range(size))) >= y[i])
 
+    model.optimize()
     print(awL)
     print(awR)
-    model.optimize()
     return [ac[i + 1].x for i in range(size)], [(ac[i + 1].x - awL[i + 1].x) for i in range(size)], [(ac[i + 1].x + awR[i + 1].x) for i in range(size)]
 
 

@@ -20,51 +20,65 @@ from boot import PyLSboot
 if __name__ == '__main__':
     freeze_support()
 
+    font = {'family': 'Times New Roman',
+            'weight': 'normal',
+            'size': 10}
+
+    matplotlib.rc('font', **font)
+
     # Parâmetros
 
     boot = 0
-    nrboot = 30
+    nrboot = 2
     cores = 8
 
+    diff = 'none'
     method = 'percentile'
     data = 'dados_reag.csv'
     lvmodel = 'lvnew.csv'
-    mvmodel = 'mvnew_.csv'
+    mvmodel = 'mvnew.csv'
     scheme = 'path'
     regression = 'ols'
 
-    # Fim
+    # Trata missing data (mean)
+
+    def isNaN(num):
+        return num != num
 
     data_ = pandas.read_csv(data)
+    mean = pd.DataFrame.mean(data_)
+    for j in range(len(data_.columns)):
+        for i in range(len(data_)):
+            if (isNaN(data_.ix[i, j])):
+                data_.ix[i, j] = mean[j]
+
+    # Go!
 
     if (boot == 0):
 
-        tese = PyLSpm(data, lvmodel, mvmodel, scheme, regression, 0, 100)
-#        tese.sampleSize()
+        tese = PyLSpm(data_, lvmodel, mvmodel, scheme, regression, 0, 100)
 
-#        font = {'family': 'Times New Roman',
-#                'weight': 'normal',
-#                'size': 14}
-#
-#        matplotlib.rc('font', **font)
-#
-#        plt.plot(tese.sampleSize()[0], tese.sampleSize()[1], 'o-')
-#        plt.xlabel('Potência')
-#        plt.ylabel('Tamanho da Amostra')
-#        plt.grid(True)
-#        plt.show()
+        if (diff == 'sample'):
+            tese.sampleSize()
 
-        Z = linkage(tese.residuals(), 'ward')
-        plt.figure(figsize=(25, 10))
-        plt.title('Dendograma de Agrupamento Hierárquico')
-        plt.xlabel('Amostra')
-        plt.ylabel('Distância')
-        dendrogram(
-            Z,
-            leaf_rotation=90.,  # rotates the x axis labels
-            leaf_font_size=8.,  # font size for the x axis la0bels
-        )
-        plt.show()
+            plt.plot(tese.sampleSize()[0], tese.sampleSize()[1], 'o-')
+            plt.xlabel('Potência')
+            plt.ylabel('Tamanho da Amostra')
+            plt.grid(True)
+            plt.show()
+
+        if (diff == 'cluster'):
+            Z = linkage(tese.residuals(), 'ward')
+            plt.figure(figsize=(25, 10))
+            plt.title('Dendograma de Agrupamento Hierárquico')
+            plt.xlabel('Amostra')
+            plt.ylabel('Distância')
+            dendrogram(
+                Z,
+                leaf_rotation=90.,  # rotates the x axis labels
+                leaf_font_size=8.,  # font size for the x axis la0bels
+            )
+            plt.show()
 #        max_d = 10
 #        clusters = fcluster(Z, max_d, criterion='distance')
 #        print(clusters)
@@ -74,11 +88,11 @@ if __name__ == '__main__':
 #        print(impa[0])
 #        print(impa[2].T)
 
-#        print(tese.predict())
+#        tese.predict()
+#        tese.residuals()
 
-#        print(tese.path_matrix)
-        imprime = PyLSpmHTML(tese)
-        imprime.generate()
+#        imprime = PyLSpmHTML(tese)
+#        imprime.generate()
 #        print(tese.pvalues)
 
     elif (boot == 1):

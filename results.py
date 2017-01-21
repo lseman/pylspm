@@ -17,6 +17,7 @@ class PyLSpmHTML(object):
         self.rhoA = plsobject.rhoA()
         self.alpha = plsobject.alpha()
         self.r2 = plsobject.r2
+        self.r2adjusted = plsobject.r2adjusted()
         self.htmt = plsobject.htmt()
         self.cr = plsobject.cr()
         self.total_effects = plsobject.total_effects
@@ -315,6 +316,7 @@ class PyLSpmHTML(object):
             self.total_effects, 'Total Effects', 'total_effects')
 
         r2 = self.gerasingleTable(self.r2, 'R-Squared', 'r2')
+        r2adjusted = self.gerasingleTable(self.r2adjusted, 'R-Squared Adjusted', 'r2adjusted')
         AVE = self.gerasingleTable(
             self.AVE, 'Average Variance Extracted', 'AVE')
 
@@ -364,7 +366,8 @@ class PyLSpmHTML(object):
             <li class=""><a href="#path_matrix_high">High Path Coefficients</a></li>
             <li class=""><a href="#path_matrix_range">Path Coefficients Range</a></li>"""
         else:
-            body += """<li class=""><a href="#r2">R-Squared</a></li>"""
+            body += """<li class=""><a href="#r2">R-Squared</a></li>
+            <li class=""><a href="#r2adjusted">R-Squared Adjusted</a></li>"""
 
         body += """<li class=""><a href="#indirect_effects">Indirect Effects</a></li>
         <li class=""><a href="#total_effects">Total Effects</a></li>
@@ -408,6 +411,7 @@ class PyLSpmHTML(object):
             f.write(path_matrix_range)
         else:
             f.write(r2)
+            f.write(r2adjusted)
         f.write(indirect_effects)
         f.write(total_effects)
         f.write(AVE)
