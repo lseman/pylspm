@@ -11,6 +11,7 @@ import scipy.stats
 from qpLRlib4 import otimiza, plotaIC
 import statsmodels.api as sm
 import scipy.linalg
+from collections import Counter
 
 
 class PyLSpm(object):
@@ -50,9 +51,8 @@ class PyLSpm(object):
         exoVar = []
         endoVar = []
 
-        outer_residuals = pd.DataFrame()
-        data_temp = pd.DataFrame()
-        estimated = pd.DataFrame()
+        outer_residuals = self.data.copy()
+        estimated = self.data.copy()
 
         for i in range(self.lenlatent):
             if(self.latent[i] in self.LVariables['target'].values):
@@ -60,48 +60,22 @@ class PyLSpm(object):
             else:
                 exoVar.append(self.latent[i])
 
-        subblocks = []
         for i in range(self.lenlatent):
             block = self.data_[self.Variables['measurement']
                                [self.Variables['latent'] == self.latent[i]]]
             block = block.columns.values
-            subblocks.append(block)
 
-        for i in range(len(subblocks)):
-            outer_residuals = pd.concat(
-                [outer_residuals, self.data[subblocks[i]]], axis=1)
-            estimated = pd.concat(
-                [estimated, self.data[subblocks[i]]], axis=1)
-            data_temp = pd.concat(
-                [data_temp, self.data_[subblocks[i]]], axis=1)
-
-        cols=pd.Series(outer_residuals.columns)
-        for dup in outer_residuals.columns.get_duplicates(): cols[outer_residuals.columns.get_loc(dup)]=[dup+'.'+str(d_idx) if d_idx!=0 else dup for d_idx in range(outer_residuals.columns.get_loc(dup).sum())]
-        outer_residuals.columns=cols
-
-        outer_residuals = pd.DataFrame(outer_residuals.values)
-        estimated = pd.DataFrame(estimated.values)
-        data_temp = pd.DataFrame(data_temp.values)
-
-        last_pos = 0
-        for i in range(len(subblocks)):
             loadings = self.outer_loadings.ix[
-                subblocks[i]][self.latent[i]].values
+                block][self.latent[i]].values
 
             outer_ = self.fscores.ix[:, i].values
             outer_ = outer_.reshape(len(outer_), 1)
             loadings = loadings.reshape(len(loadings), 1)
             outer_ = np.dot(outer_, loadings.T)
 
-            outer_residuals.ix[:, last_pos:(last_pos - 1 + len(subblocks[i]))] = data_temp.ix[
-                :, last_pos:(last_pos - 1 + len(subblocks[i]))] - outer_
-            estimated.ix[:, last_pos:(last_pos - 1 + len(subblocks[i]))] = outer_
-
-            last_pos = last_pos + len(subblocks[i])
-
-        outer_residuals.columns = cols
-        estimated.columns = cols
-        data_temp.columns = cols
+            outer_residuals.ix[:, block] = self.data_.ix[
+                :, block] - outer_
+            estimated.ix[:, block] = outer_
 
         inner_residuals = self.fscores[endoVar]
         inner_ = pd.DataFrame.dot(self.fscores, self.path_matrix.ix[endoVar].T)
@@ -109,17 +83,15 @@ class PyLSpm(object):
 
         residuals = pd.concat([outer_residuals, inner_residuals], axis=1)
 
-        return residuals, data_temp, outer_residuals, estimated
+        return residuals, outer_residuals, estimated
 
     def srmr(self):
-        empirico = self.residuals()[1]
-        
-        srmr = (pd.DataFrame.corr(empirico) - self.implied())
+        srmr = (self.empirical() - self.implied())
         srmr = np.sqrt(((srmr.values) ** 2).mean())
         return srmr
 
     def implied(self):
-        implied = self.residuals()[3]
+        implied = self.residuals()[2]
         implied = implied.reindex_axis(sorted(implied.columns), axis=1)
 
         implied = pd.DataFrame.cov(implied)
@@ -127,7 +99,7 @@ class PyLSpm(object):
         return implied
 
     def empirical(self):
-        empirical = self.residuals()[1]
+        empirical = self.data_
         empirical = empirical.reindex_axis(sorted(empirical.columns), axis=1)
         return pd.DataFrame.corr(empirical)
 
@@ -171,7 +143,7 @@ class PyLSpm(object):
         mean_ = np.mean(self.data, 0)
         return [mean_, sd_]
 
-    def predict(self, method='exogenous'):
+    def predict(self, method='redundancy'):
         exoVar = []
         endoVar = []
 
@@ -182,7 +154,6 @@ class PyLSpm(object):
                 exoVar.append(self.latent[i])
 
         if (method == 'exogenous'):
-            # Exogenous
             Beta = self.path_matrix.ix[endoVar][endoVar]
             Gamma = self.path_matrix.ix[endoVar][exoVar]
 
@@ -205,12 +176,15 @@ class PyLSpm(object):
                     beta.ix[endoVar[i], exoVar[j]] = mid[k]
                     k += 1
 
-        if (method == 'redundancy'):
-            # Redundancy
+        elif (method == 'redundancy'):
             beta = self.path_matrix.copy()
             beta_ = pd.DataFrame(1, index=np.arange(
                 len(exoVar)), columns=np.arange(len(exoVar)))
             beta.ix[exoVar, exoVar] = np.diag(np.diag(beta_.values))
+
+        elif (method == 'communality'):
+            beta = np.diag(np.ones(len(self.path_matrix)))
+            beta = pd.DataFrame(beta)
 
         partial_ = pd.DataFrame.dot(self.outer_weights, beta.T.values)
         prediction = pd.DataFrame.dot(partial_, self.outer_loadings.T.values)
@@ -389,7 +363,7 @@ class PyLSpm(object):
 
         return alpha.T
 
-    def __init__(self, dados, LVcsv, Mcsv, scheme='path', regression='ols', h=0, maximo=300, stopCrit=7):
+    def __init__(self, dados, LVcsv, Mcsv, scheme='path', regression='ols', h=0, maximo=300, stopCrit=7, HOC='false'):
         self.data = dados
         self.LVcsv = LVcsv
         self.Mcsv = Mcsv
@@ -410,15 +384,49 @@ class PyLSpm(object):
         LVariables = pd.read_csv(LVcsv)
         Variables = pd.read_csv(Mcsv)
 
-        manifests_ = Variables['measurement'].values.flatten('F')
-        manifests__ = np.unique(manifests_, return_index=True)[1]
-        manifests = [manifests_[i] for i in sorted(manifests__)]
-
         latent_ = LVariables.values.flatten('F')
         latent__ = np.unique(latent_, return_index=True)[1]
         latent = [latent_[i] for i in sorted(latent__)]
 
         self.lenlatent = len(latent)
+
+        # Repeating indicators
+
+        if (HOC == 'true'):
+
+            data_temp = pd.DataFrame()
+
+            for i in range(self.lenlatent):
+                block = self.data[Variables['measurement']
+                                  [Variables['latent'] == latent[i]]]
+                block = block.columns.values
+                data_temp = pd.concat(
+                    [data_temp, data[block]], axis=1)
+
+            cols = list(data_temp.columns)
+            counts = Counter(cols)
+            for s, num in counts.items():
+                if num > 1:
+                    for suffix in range(1, num + 1):
+                        cols[cols.index(s)] = s + '.' + str(suffix)
+            data_temp.columns = cols
+
+            doublemanifests = list(Variables['measurement'].values)
+            counts = Counter(doublemanifests)
+            for s, num in counts.items():
+                if num > 1:
+                    for suffix in range(1, num + 1):
+                        doublemanifests[doublemanifests.index(
+                            s)] = s + '.' + str(suffix)
+
+            Variables['measurement'] = doublemanifests
+            data = data_temp
+
+        # End data manipulation
+
+        manifests_ = Variables['measurement'].values.flatten('F')
+        manifests__ = np.unique(manifests_, return_index=True)[1]
+        manifests = [manifests_[i] for i in sorted(manifests__)]
 
         self.manifests = manifests
         self.latent = latent
@@ -644,6 +652,15 @@ class PyLSpm(object):
         self.outer_weights = outer_weights
         self.r2 = r2
 
+    def data(self):
+        return self.data
+
+    def Variables(self):
+        return self.Variables
+
+    def latent(self):
+        return self.latent
+
     def scheme(self):
         return self.scheme
 
@@ -753,9 +770,21 @@ class PyLSpm(object):
                 :, "target"] == dependant[i]]["source"]
             dependant_ = unstandardizedScores.ix[:, dependant[i]]
             independant_ = unstandardizedScores.ix[:, independant]
-            ac, awL, awR = otimiza(dependant_, independant_, len(
-                independant_.columns), self.h, 'ols')
-            unstandardizedPath.ix[dependant[i], independant] = ac
+
+#            ac, awL, awR = otimiza(dependant_, independant_, len(
+#                independant_.columns), self.h, 'ols')
+            print(len(independant_))
+            print(len(independant_.T.values.flatten()))
+            print(np.ones(len(independant_)))
+            A = np.vstack(
+                [independant_.T.values, np.ones(len(independant_))]).T
+            coef, resid = np.linalg.lstsq(A, dependant_)[:2]
+            print(coef)
+#            del coef[-1]
+
+            unstandardizedPath.ix[dependant[i], independant] = coef[:-1]
+
+        print(unstandardizedPath)
 
         # Unstandardized Total Effects
 

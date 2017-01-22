@@ -36,7 +36,7 @@ if __name__ == '__main__':
     # Parâmetros
 
     boot = 0
-    nrboot = 2
+    nrboot = 100
     cores = 8
 
     diff = 'none'
@@ -63,7 +63,7 @@ if __name__ == '__main__':
 
     if (boot == 0):
 
-        tese = PyLSpm(data_, lvmodel, mvmodel, scheme, regression, 0, 100)
+        tese = PyLSpm(data_, lvmodel, mvmodel, scheme, regression, 0, 100, HOC='true')
 
         if (diff == 'sample'):
             tese.sampleSize()
@@ -99,6 +99,9 @@ if __name__ == '__main__':
 
 #        print_full(tese.residuals())
 
+#        tese.impa()
+
+        tese.predict()
         imprime = PyLSpmHTML(tese)
         imprime.generate()
 
@@ -197,21 +200,20 @@ if __name__ == '__main__':
         def isNaN(num):
             return num != num
 
+        tese = PyLSpm(data_, lvmodel, mvmodel, scheme, regression, 0, 100)
+        data2_ = tese.data
         # observation/distance must not be interger
         distance = 7
-        Q2 = pd.DataFrame(0, index=range(len(data_.columns)),
+        Q2 = pd.DataFrame(0, index=data2_.columns.values,
                           columns=range(distance))
-        Q2.index = data_.columns.values
 
-        SSE = pd.DataFrame(0, index=range(len(data_.columns)),
+        SSE = pd.DataFrame(0, index=data2_.columns.values,
                            columns=range(distance))
-        SSE.index = data_.columns.values
 
-        SSO = pd.DataFrame(0, index=range(len(data_.columns)),
+        SSO = pd.DataFrame(0, index=data2_.columns.values,
                            columns=range(distance))
-        SSO.index = data_.columns.values
 
-        mean = pd.DataFrame.mean(data_)
+        mean = pd.DataFrame.mean(data2_)
 
         for dist in range(distance):
             dataBlind = copy.deepcopy(data_)
@@ -235,13 +237,31 @@ if __name__ == '__main__':
                               scheme, regression, 0, 100)
             predictedRound = plsRound.predict()
 
-            SSE[dist] = pd.DataFrame.sum((data_ - predictedRound)**2)
-            SSO[dist] = pd.DataFrame.sum((data_ - mean)**2)
+            SSE[dist] = pd.DataFrame.sum((data2_ - predictedRound)**2)
+            SSO[dist] = pd.DataFrame.sum((data2_ - mean)**2)
+        
+        latent = plsRound.latent
+        Variables = plsRound.Variables
 
         SSE = pd.DataFrame.sum(SSE, axis=1)
         SSO = pd.DataFrame.sum(SSO, axis=1)
+
+        Q2latent = pd.DataFrame(0, index=np.arange(1), columns=latent)
+
+        for i in range(len(latent)):
+            block = data2_[Variables['measurement'][
+                Variables['latent'] == latent[i]]]
+            block = block.columns.values
+
+            SSEblock = pd.DataFrame.sum(SSE[block])
+            SSOblock = pd.DataFrame.sum(SSO[block])
+            
+            Q2latent[latent[i]] = 1 - (SSEblock/SSOblock)
+
         Q2 = 1 - (SSE / SSO)
         print(Q2)
+        Q2latent = Q2latent.T
+        print(Q2latent)
 
     elif (boot == 3):
 
