@@ -10,15 +10,22 @@ from scipy.stats import norm
 
 import matplotlib
 from matplotlib import pyplot as plt
-from scipy.cluster.hierarchy import dendrogram, linkage
+from scipy.cluster.hierarchy import dendrogram, linkage, ward, distance
 from scipy.cluster.hierarchy import fcluster
 
 from pylspm import PyLSpm
 from results import PyLSpmHTML
 from boot import PyLSboot
 
+import csv
+
 if __name__ == '__main__':
     freeze_support()
+
+    def print_full(x):
+        pd.set_option('display.max_columns', len(x))
+        print(x)
+        pd.reset_option('display.max_columns')
 
     font = {'family': 'Times New Roman',
             'weight': 'normal',
@@ -68,13 +75,15 @@ if __name__ == '__main__':
             plt.show()
 
         if (diff == 'cluster'):
-            Z = linkage(tese.residuals(), 'ward')
-            plt.figure(figsize=(25, 10))
+            #            d = sp.spatial.distance.euclidean(residuos.values)
+            Z = linkage(tese.residuals()[0], method='ward')
+            plt.figure(figsize=(15, 8))
             plt.title('Dendograma de Agrupamento Hierárquico')
             plt.xlabel('Amostra')
             plt.ylabel('Distância')
             dendrogram(
                 Z,
+                #                truncate_mode='lastp',
                 leaf_rotation=90.,  # rotates the x axis labels
                 leaf_font_size=8.,  # font size for the x axis la0bels
             )
@@ -88,12 +97,10 @@ if __name__ == '__main__':
 #        print(impa[0])
 #        print(impa[2].T)
 
-#        tese.predict()
-#        tese.residuals()
+#        print_full(tese.residuals())
 
-#        imprime = PyLSpmHTML(tese)
-#        imprime.generate()
-#        print(tese.pvalues)
+        imprime = PyLSpmHTML(tese)
+        imprime.generate()
 
     elif (boot == 1):
         tese = PyLSboot(nrboot, cores, data_, lvmodel,
@@ -189,12 +196,21 @@ if __name__ == '__main__':
 
         def isNaN(num):
             return num != num
+
         # observation/distance must not be interger
         distance = 7
-
         Q2 = pd.DataFrame(0, index=range(len(data_.columns)),
                           columns=range(distance))
         Q2.index = data_.columns.values
+
+        SSE = pd.DataFrame(0, index=range(len(data_.columns)),
+                           columns=range(distance))
+        SSE.index = data_.columns.values
+
+        SSO = pd.DataFrame(0, index=range(len(data_.columns)),
+                           columns=range(distance))
+        SSO.index = data_.columns.values
+
         mean = pd.DataFrame.mean(data_)
 
         for dist in range(distance):
@@ -219,11 +235,12 @@ if __name__ == '__main__':
                               scheme, regression, 0, 100)
             predictedRound = plsRound.predict()
 
-            sse = pd.DataFrame.sum((data_ - predictedRound)**2)
-            sso = pd.DataFrame.sum((data_ - mean)**2)
-            Q2_ = 1 - (sse / sso)
-            Q2[dist] = Q2_
-        Q2 = pd.DataFrame.mean(Q2, axis=1)
+            SSE[dist] = pd.DataFrame.sum((data_ - predictedRound)**2)
+            SSO[dist] = pd.DataFrame.sum((data_ - mean)**2)
+
+        SSE = pd.DataFrame.sum(SSE, axis=1)
+        SSO = pd.DataFrame.sum(SSO, axis=1)
+        Q2 = 1 - (SSE / SSO)
         print(Q2)
 
     elif (boot == 3):

@@ -50,7 +50,9 @@ class PyLSpm(object):
         exoVar = []
         endoVar = []
 
-        outer_residuals = self.data.copy()
+        outer_residuals = pd.DataFrame()
+        data_temp = pd.DataFrame()
+        estimated = pd.DataFrame()
 
         for i in range(self.lenlatent):
             if(self.latent[i] in self.LVariables['target'].values):
@@ -58,28 +60,76 @@ class PyLSpm(object):
             else:
                 exoVar.append(self.latent[i])
 
+        subblocks = []
         for i in range(self.lenlatent):
-            outer_ = self.fscores.ix[:,i].values
             block = self.data_[self.Variables['measurement']
                                [self.Variables['latent'] == self.latent[i]]]
             block = block.columns.values
-            loadings = self.outer_loadings.ix[block][self.latent[i]].values
+            subblocks.append(block)
 
+        for i in range(len(subblocks)):
+            outer_residuals = pd.concat(
+                [outer_residuals, self.data[subblocks[i]]], axis=1)
+            estimated = pd.concat(
+                [estimated, self.data[subblocks[i]]], axis=1)
+            data_temp = pd.concat(
+                [data_temp, self.data_[subblocks[i]]], axis=1)
+
+        cols=pd.Series(outer_residuals.columns)
+        for dup in outer_residuals.columns.get_duplicates(): cols[outer_residuals.columns.get_loc(dup)]=[dup+'.'+str(d_idx) if d_idx!=0 else dup for d_idx in range(outer_residuals.columns.get_loc(dup).sum())]
+        outer_residuals.columns=cols
+
+        outer_residuals = pd.DataFrame(outer_residuals.values)
+        estimated = pd.DataFrame(estimated.values)
+        data_temp = pd.DataFrame(data_temp.values)
+
+        last_pos = 0
+        for i in range(len(subblocks)):
+            loadings = self.outer_loadings.ix[
+                subblocks[i]][self.latent[i]].values
+
+            outer_ = self.fscores.ix[:, i].values
             outer_ = outer_.reshape(len(outer_), 1)
             loadings = loadings.reshape(len(loadings), 1)
-
             outer_ = np.dot(outer_, loadings.T)
 
-            outer_residuals.ix[:, block] = self.data_.ix[:, block] - outer_
+            outer_residuals.ix[:, last_pos:(last_pos - 1 + len(subblocks[i]))] = data_temp.ix[
+                :, last_pos:(last_pos - 1 + len(subblocks[i]))] - outer_
+            estimated.ix[:, last_pos:(last_pos - 1 + len(subblocks[i]))] = outer_
 
-        outer_residuals = self.data_ - pd.DataFrame.dot(self.fscores,self.outer_loadings.T)
+            last_pos = last_pos + len(subblocks[i])
+
+        outer_residuals.columns = cols
+        estimated.columns = cols
+        data_temp.columns = cols
 
         inner_residuals = self.fscores[endoVar]
         inner_ = pd.DataFrame.dot(self.fscores, self.path_matrix.ix[endoVar].T)
         inner_residuals = self.fscores[endoVar] - inner_
 
         residuals = pd.concat([outer_residuals, inner_residuals], axis=1)
-        return residuals
+
+        return residuals, data_temp, outer_residuals, estimated
+
+    def srmr(self):
+        empirico = self.residuals()[1]
+        
+        srmr = (pd.DataFrame.corr(empirico) - self.implied())
+        srmr = np.sqrt(((srmr.values) ** 2).mean())
+        return srmr
+
+    def implied(self):
+        implied = self.residuals()[3]
+        implied = implied.reindex_axis(sorted(implied.columns), axis=1)
+
+        implied = pd.DataFrame.cov(implied)
+        implied.values[[np.arange(len(implied))] * 2] = 1
+        return implied
+
+    def empirical(self):
+        empirical = self.residuals()[1]
+        empirical = empirical.reindex_axis(sorted(empirical.columns), axis=1)
+        return pd.DataFrame.corr(empirical)
 
     def frequency(self):
         frequencia = pd.DataFrame(0, index=range(1, 6), columns=self.manifests)
@@ -176,21 +226,6 @@ class PyLSpm(object):
 
         return predictedData
 
-    def srmr(self):
-        srmr = (pd.DataFrame.corr(self.data) - self.implied())
-        srmr = np.sqrt(((srmr.values) ** 2).mean())
-        return srmr
-
-    def implied(self):
-        corLVs = pd.DataFrame.cov(self.fscores)
-        implied_ = pd.DataFrame.dot(self.outer_loadings, corLVs)
-        implied = pd.DataFrame.dot(implied_, self.outer_loadings.T)
-        implied.values[[np.arange(len(self.manifests))] * 2] = 1
-        return implied
-
-    def empirical(self):
-        return pd.DataFrame.corr(self.data)
-
     def cr(self):
         # Composite Reliability
         composite = pd.DataFrame(0, index=np.arange(1), columns=self.latent)
@@ -231,10 +266,10 @@ class PyLSpm(object):
 
         for i in range(self.lenlatent):
             p = sum(self.LVariables['target'] == self.latent[i])
-            r2adjusted[self.latent[i]] = r2[i] - (p*(1-r2[i]))/(n-p-1)
+            r2adjusted[self.latent[i]] = r2[i] - \
+                (p * (1 - r2[i])) / (n - p - 1)
 
         return r2adjusted.T
-
 
     def htmt(self):
 
