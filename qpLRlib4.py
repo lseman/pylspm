@@ -71,7 +71,8 @@ def otimiza(y, x, size, h, method='fuzzy', plotaIC='false'):
                                            for j in range(size))) >= y[i])
 
     model.optimize()
-
+    print(awL)
+    print(awR)
 #    plota(x, y, ac, awL, awR, xname, yname, size)
 #    ic = IC(x, y, ac, awL, awR, size)
 

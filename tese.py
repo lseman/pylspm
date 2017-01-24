@@ -4,7 +4,6 @@ import pandas
 import numpy as np
 from numpy import inf
 import pandas as pd
-import copy
 import scipy.stats
 from scipy.stats import norm
 
@@ -16,6 +15,8 @@ from scipy.cluster.hierarchy import fcluster
 from pylspm import PyLSpm
 from results import PyLSpmHTML
 from boot import PyLSboot
+from rebus import rebus
+from blindfolding import blindfolding
 
 import csv
 
@@ -39,7 +40,7 @@ if __name__ == '__main__':
     nrboot = 100
     cores = 8
 
-    diff = 'none'
+    diff = 'cluster'
     method = 'percentile'
     data = 'dados_reag.csv'
     lvmodel = 'lvnew.csv'
@@ -63,7 +64,8 @@ if __name__ == '__main__':
 
     if (boot == 0):
 
-        tese = PyLSpm(data_, lvmodel, mvmodel, scheme, regression, 0, 100, HOC='true')
+        tese = PyLSpm(data_, lvmodel, mvmodel, scheme,
+                      regression, 0, 100, HOC='true')
 
         if (diff == 'sample'):
             tese.sampleSize()
@@ -75,33 +77,8 @@ if __name__ == '__main__':
             plt.show()
 
         if (diff == 'cluster'):
-            #            d = sp.spatial.distance.euclidean(residuos.values)
-            Z = linkage(tese.residuals()[0], method='ward')
-            plt.figure(figsize=(15, 8))
-            plt.title('Dendograma de Agrupamento Hierárquico')
-            plt.xlabel('Amostra')
-            plt.ylabel('Distância')
-            dendrogram(
-                Z,
-                #                truncate_mode='lastp',
-                leaf_rotation=90.,  # rotates the x axis labels
-                leaf_font_size=8.,  # font size for the x axis la0bels
-            )
-            plt.show()
-#        max_d = 10
-#        clusters = fcluster(Z, max_d, criterion='distance')
-#        print(clusters)
-#        tese.nipals()
+            rebus(tese.residuals()[0], data_, tese.data, lvmodel, mvmodel, scheme, regression)
 
-#        impa = tese.impa()
-#        print(impa[0])
-#        print(impa[2].T)
-
-#        print_full(tese.residuals())
-
-#        tese.impa()
-
-        tese.predict()
         imprime = PyLSpmHTML(tese)
         imprime.generate()
 
@@ -196,72 +173,8 @@ if __name__ == '__main__':
                 print(high_conf)
 
     elif (boot == 2):
-
-        def isNaN(num):
-            return num != num
-
-        tese = PyLSpm(data_, lvmodel, mvmodel, scheme, regression, 0, 100)
-        data2_ = tese.data
-        # observation/distance must not be interger
-        distance = 7
-        Q2 = pd.DataFrame(0, index=data2_.columns.values,
-                          columns=range(distance))
-
-        SSE = pd.DataFrame(0, index=data2_.columns.values,
-                           columns=range(distance))
-
-        SSO = pd.DataFrame(0, index=data2_.columns.values,
-                           columns=range(distance))
-
-        mean = pd.DataFrame.mean(data2_)
-
-        for dist in range(distance):
-            dataBlind = copy.deepcopy(data_)
-            rodada = 1
-            count = distance - dist - 1
-            for j in range(len(data_.columns)):
-                for i in range(len(data_)):
-                    count += 1
-                    if count == distance:
-                        dataBlind.ix[i, j] = np.nan
-                        count = 0
-
-            for j in range(len(data_.columns)):
-                for i in range(len(data_)):
-                    if (isNaN(dataBlind.ix[i, j])):
-                        dataBlind.ix[i, j] = mean[j]
-
-            rodada = rodada + 1
-
-            plsRound = PyLSpm(dataBlind, lvmodel, mvmodel,
-                              scheme, regression, 0, 100)
-            predictedRound = plsRound.predict()
-
-            SSE[dist] = pd.DataFrame.sum((data2_ - predictedRound)**2)
-            SSO[dist] = pd.DataFrame.sum((data2_ - mean)**2)
-        
-        latent = plsRound.latent
-        Variables = plsRound.Variables
-
-        SSE = pd.DataFrame.sum(SSE, axis=1)
-        SSO = pd.DataFrame.sum(SSO, axis=1)
-
-        Q2latent = pd.DataFrame(0, index=np.arange(1), columns=latent)
-
-        for i in range(len(latent)):
-            block = data2_[Variables['measurement'][
-                Variables['latent'] == latent[i]]]
-            block = block.columns.values
-
-            SSEblock = pd.DataFrame.sum(SSE[block])
-            SSOblock = pd.DataFrame.sum(SSO[block])
-            
-            Q2latent[latent[i]] = 1 - (SSEblock/SSOblock)
-
-        Q2 = 1 - (SSE / SSO)
-        print(Q2)
-        Q2latent = Q2latent.T
-        print(Q2latent)
+        blindfolding(data_, lvmodel, mvmodel, scheme,
+                  regression, 0, 100, HOC='true')
 
     elif (boot == 3):
 

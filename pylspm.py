@@ -47,12 +47,24 @@ class PyLSpm(object):
         X = X / scale_
         return X
 
+    def endoexo(self):
+        exoVar = []
+        endoVar = []
+
+        for i in range(self.lenlatent):
+            if(self.latent[i] in self.LVariables['target'].values):
+                endoVar.append(self.latent[i])
+            else:
+                exoVar.append(self.latent[i])
+
+        return exoVar, endoVar
+
     def residuals(self):
         exoVar = []
         endoVar = []
 
         outer_residuals = self.data.copy()
-        estimated = self.data.copy()
+        comun_ = self.data.copy()
 
         for i in range(self.lenlatent):
             if(self.latent[i] in self.LVariables['target'].values):
@@ -75,7 +87,7 @@ class PyLSpm(object):
 
             outer_residuals.ix[:, block] = self.data_.ix[
                 :, block] - outer_
-            estimated.ix[:, block] = outer_
+            comun_.ix[:, block] = outer_
 
         inner_residuals = self.fscores[endoVar]
         inner_ = pd.DataFrame.dot(self.fscores, self.path_matrix.ix[endoVar].T)
@@ -83,7 +95,11 @@ class PyLSpm(object):
 
         residuals = pd.concat([outer_residuals, inner_residuals], axis=1)
 
-        return residuals, outer_residuals, estimated
+        mean_ = np.mean(self.data, 0)
+
+        comun_ = comun_.apply(lambda row: row + mean_, axis=1)
+
+        return residuals, outer_residuals, inner_residuals, comun_
 
     def srmr(self):
         srmr = (self.empirical() - self.implied())
@@ -91,16 +107,15 @@ class PyLSpm(object):
         return srmr
 
     def implied(self):
-        implied = self.residuals()[2]
-        implied = implied.reindex_axis(sorted(implied.columns), axis=1)
+        corLVs = pd.DataFrame.cov(self.fscores)
+        implied_ = pd.DataFrame.dot(self.outer_loadings, corLVs)
+        implied = pd.DataFrame.dot(implied_, self.outer_loadings.T)
 
-        implied = pd.DataFrame.cov(implied)
-        implied.values[[np.arange(len(implied))] * 2] = 1
+        implied.values[[np.arange(len(self.manifests))] * 2] = 1
         return implied
 
     def empirical(self):
         empirical = self.data_
-        empirical = empirical.reindex_axis(sorted(empirical.columns), axis=1)
         return pd.DataFrame.corr(empirical)
 
     def frequency(self):
@@ -195,8 +210,6 @@ class PyLSpm(object):
         intercept = mean_ - np.dot(mean_, prediction)
 
         predictedData = predicted.apply(lambda row: row + intercept, axis=1)
-
-        residuals = predictedData - self.data
 
         return predictedData
 

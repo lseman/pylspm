@@ -17,10 +17,6 @@ class PyLSboot(object):
         bootstraping = PyLSpm(amostra, self.LVcsv, self.Mcsv, self.scheme,
                               self.reg, self.h, self.maximo, self.stopCriterion)
         if (bootstraping.convergiu == 1):
-            # return [bootstraping.outer_loadings.values,
-            # bootstraping.path_matrix.values,
-            # bootstraping.path_matrix_low.values,
-            # bootstraping.path_matrix_high.values]
             return [bootstraping.path_matrix.values]
 
     def do_work_jk(self, item):
@@ -28,10 +24,6 @@ class PyLSboot(object):
         bootstraping = PyLSpm(amostra, self.LVcsv, self.Mcsv, self.scheme,
                               self.reg, self.h, self.maximo, self.stopCriterion)
         if (bootstraping.convergiu == 1):
-            # return [bootstraping.outer_loadings.values,
-            # bootstraping.path_matrix.values,
-            # bootstraping.path_matrix_low.values,
-            # bootstraping.path_matrix_high.values]
             return [bootstraping.path_matrix.values]
 
     def __init__(self, br, cores, dados, LVcsv, Mcsv, scheme='fuzzy', reg='ols', h=0, maximo=300, stopCrit=7):
