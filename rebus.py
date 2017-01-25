@@ -1,6 +1,5 @@
 from multiprocessing import Pool, freeze_support
 
-import pandas
 import numpy as np
 from numpy import inf
 import pandas as pd
@@ -15,6 +14,7 @@ from scipy.cluster.hierarchy import fcluster
 from pylspm import PyLSpm
 from results import PyLSpmHTML
 from boot import PyLSboot
+
 
 def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
 
@@ -31,7 +31,7 @@ def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
     plt.show()
     max_d = 17
     clusters = fcluster(Z, max_d, criterion='distance')
-    
+
     while True:
         clusters = pd.DataFrame(clusters)
         clusters.columns = ['Split']
@@ -43,15 +43,16 @@ def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
         nk = max(clusters['Split'])
         rebus = []
         for i in range(nk):
-            data_ = (dataSplit.loc[dataSplit['Split'] == i + 1]).drop('Split', axis=1)
+            data_ = (dataSplit.loc[dataSplit['Split']
+                                   == i + 1]).drop('Split', axis=1)
             data_.index = range(len(data_))
             rebus.append(PyLSpm(data_, lvmodel, mvmodel, scheme,
                                 regression, 0, 100, HOC='true'))
 
         CM = pd.DataFrame(0, index=np.arange(len(data)), columns=np.arange(nk))
 
-        exoVar = rebus[i].endoexo()[0]
-        endoVar = rebus[i].endoexo()[1]
+        exoVar = rebus[i].endoexo()[1]
+        endoVar = rebus[i].endoexo()[0]
 
         for j in range(nk):
 
@@ -60,17 +61,18 @@ def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
             # Novos residuais
 
             mean_ = np.mean(rebus[j].data, 0)
-            scale_ = np.std(rebus[j].data, 0) * np.sqrt((len(data_)-1)/len(data_))
+            scale_ = np.std(rebus[j].data, 0) * \
+                np.sqrt((len(data_) - 1) / len(data_))
 
             dataRealoc_ = dataRealoc_ - mean_
             dataRealoc_ = dataRealoc_ / scale_
 
             outer_residuals = dataRealoc_.copy()
-            fscores = pd.DataFrame.dot(dataRealoc_,rebus[0].outer_weights)
+            fscores = pd.DataFrame.dot(dataRealoc_, rebus[0].outer_weights)
 
             for i in range(len(rebus[j].latent)):
                 block = dataRealoc_[rebus[j].Variables['measurement']
-                                   [rebus[j].Variables['latent'] == rebus[j].latent[i]]]
+                                    [rebus[j].Variables['latent'] == rebus[j].latent[i]]]
                 block = block.columns.values
 
                 loadings = rebus[j].outer_loadings.ix[
@@ -112,7 +114,7 @@ def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
         changes = diff_clusters.astype(bool).sum()
 
         print(changes)
-        if((changes/len(data))<0.005):
+        if((changes / len(data)) < 0.005):
             break
 
         old_clusters = clusters.copy()
@@ -127,10 +129,12 @@ def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
     nk = max(clusters['Split'])
     rebus = []
     for i in range(nk):
-        data_ = (dataSplit.loc[dataSplit['Split'] == i + 1]).drop('Split', axis=1)
+        data_ = (dataSplit.loc[dataSplit['Split']
+                               == i + 1]).drop('Split', axis=1)
         data_.index = range(len(data_))
         rebus.append(PyLSpm(data_, lvmodel, mvmodel, scheme,
-                                regression, 0, 100, HOC='true'))
-        print(len(data_)/len(data)*100)
+                            regression, 0, 100, HOC='true'))
+        print(np.round(len(data_) / len(data) * 100, 2))
         print(len(data_))
         print(rebus[i].path_matrix)
+        print(rebus[i].gof())

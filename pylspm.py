@@ -47,6 +47,22 @@ class PyLSpm(object):
         X = X / scale_
         return X
 
+    def gof(self):
+        r2mean = np.mean(self.r2.T[self.endoexo()[0]].values)
+        AVEmean = self.AVE().copy()
+
+        totalblock = 0
+        for i in range(self.lenlatent):
+            block = self.data_[self.Variables['measurement']
+                               [self.Variables['latent'] == self.latent[i]]]
+            block = len(block.columns.values)
+            totalblock += block
+            AVEmean[self.latent[i]] = AVEmean[self.latent[i]] * block
+
+        AVEmean = np.sum(AVEmean)/totalblock
+        return np.sqrt(AVEmean * r2mean)
+
+
     def endoexo(self):
         exoVar = []
         endoVar = []
@@ -57,7 +73,7 @@ class PyLSpm(object):
             else:
                 exoVar.append(self.latent[i])
 
-        return exoVar, endoVar
+        return endoVar, exoVar
 
     def residuals(self):
         exoVar = []
@@ -386,6 +402,7 @@ class PyLSpm(object):
         self.scheme = scheme
         self.regression = regression
 
+        self.trick = 'no'
         contador = 0
         convergiu = 0
 
@@ -563,6 +580,7 @@ class PyLSpm(object):
 
         # Bootstraping trick
         if(np.isnan(outer_weights).any().any()):
+            self.trick = 'descarta'
             return None
 
         fscores = pd.DataFrame.dot(data_, outer_weights)
@@ -709,6 +727,9 @@ class PyLSpm(object):
 
     def convergiu(self):
         return self.convergiu
+
+    def trick(self):
+        return self.trick
 
     def impa(self):
 

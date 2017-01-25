@@ -13,7 +13,7 @@ def blindfolding(data_, lvmodel, mvmodel, scheme,
                  regression, h='0', maxit='100', HOC='true'):
 
     model = PyLSpm(data_, lvmodel, mvmodel, scheme,
-                  regression, 0, 100, HOC=HOC)
+                  regression, h, maxit, HOC=HOC)
     data2_ = model.data
     # observation/distance must not be interger
     distance = 7

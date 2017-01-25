@@ -28,6 +28,7 @@ class PyLSpmHTML(object):
         self.regression = plsobject.regression
 
         self.srmr = plsobject.srmr()
+        self.gof = plsobject.gof()
         self.frequency = plsobject.frequency()
         self.mean = plsobject.dataInfo()[0]
         self.sd = plsobject.dataInfo()[1]
@@ -42,9 +43,9 @@ class PyLSpmHTML(object):
                     <tr>"""
 
         linhas = ['Scheme', 'Regression', 'Latent Variables',
-                  'Manifests', 'Observations', 'SRMR']
+                  'Manifests', 'Observations', 'SRMR', 'GoF']
         conteudo = [(self.scheme), self.regression, len(self.path_matrix), len(
-            self.outer_loadings), len(self.fscores), round(self.srmr, 3)]
+            self.outer_loadings), len(self.fscores), round(self.srmr, 3), round(self.gof, 3)]
 
         print_matrix += """</tr></thead><tbody>"""
 
@@ -316,7 +317,8 @@ class PyLSpmHTML(object):
             self.total_effects, 'Total Effects', 'total_effects')
 
         r2 = self.gerasingleTable(self.r2, 'R-Squared', 'r2')
-        r2adjusted = self.gerasingleTable(self.r2adjusted, 'R-Squared Adjusted', 'r2adjusted')
+        r2adjusted = self.gerasingleTable(
+            self.r2adjusted, 'R-Squared Adjusted', 'r2adjusted')
         AVE = self.gerasingleTable(
             self.AVE, 'Average Variance Extracted', 'AVE')
 
