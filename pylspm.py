@@ -9,7 +9,7 @@ import numpy as np
 import scipy as sp
 import scipy.stats
 from qpLRlib4 import otimiza, plotaIC
-import statsmodels.api as sm
+#import statsmodels.api as sm
 import scipy.linalg
 from collections import Counter
 

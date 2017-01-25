@@ -26,7 +26,7 @@ class PyLSboot(object):
         if (bootstraping.convergiu == 1):
             return [bootstraping.path_matrix.values]
 
-    def __init__(self, br, cores, dados, LVcsv, Mcsv, scheme='fuzzy', reg='ols', h=0, maximo=300, stopCrit=7):
+    def __init__(self, br, cores, dados, LVcsv, Mcsv, scheme='path', reg='ols', h=0, maximo=300, stopCrit=7):
 
         self.data = dados
         self.LVcsv = LVcsv

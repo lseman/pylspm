@@ -17,6 +17,7 @@ from rebus import rebus
 from blindfolding import blindfolding
 from bootstraping import bootstrap
 from mga import mga
+from gac import gac
 
 if __name__ == '__main__':
     freeze_support()
@@ -34,11 +35,11 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    mode = 0
+    mode = 4
     nrboot = 10
     cores = 8
 
-    diff = 'rebus'
+    diff = 'none'
     method = 'percentile'
     data = 'dados_miss.csv'
     lvmodel = 'lvnew.csv'
@@ -74,7 +75,7 @@ if __name__ == '__main__':
             plt.grid(True)
             plt.show()
 
-        if (diff == 'rebus'):
+        elif (diff == 'rebus'):
             rebus(tese.residuals()[0], data_, tese.data,
                   lvmodel, mvmodel, scheme, regression)
 
@@ -92,3 +93,14 @@ if __name__ == '__main__':
     elif (mode == 3):
         mga(nrboot, cores, data_, lvmodel,
             mvmodel, scheme, regression, 0, 100, g1=0, g2=1)
+
+    elif (mode == 4):
+        n_individuals = 3
+        n_clusters = 3
+        p_crossover = 0.6
+        p_mutation = 0.1
+        iterations = 5
+
+        gac(n_individuals, n_clusters,
+            p_crossover, p_mutation, iterations,
+            data_, lvmodel, mvmodel, scheme, regression)
