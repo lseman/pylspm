@@ -98,7 +98,8 @@ if __name__ == '__main__':
         n_individuals = 3
         n_clusters = 3
         p_crossover = 0.6
-        p_mutation = 0.1
+        p_mutation = 1-((0.3)**(1.0/(1.0*len(data_))))
+        print(p_mutation)
         iterations = 5
 
         gac(n_individuals, n_clusters,

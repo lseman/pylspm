@@ -62,8 +62,10 @@ class Individual(object):
     def mutation(self, pmut, n_clusters):
         for g, gene in enumerate(self.genes):
             if uniform(0, 1) <= pmut:
-                self.genes[g] = random.randrange(n_clusters)
-
+                oldgene = self.genes[g]
+                # garante mutation diferente
+                while self.genes[g] == oldgene:
+                    self.genes[g] = random.randrange(n_clusters)
 
 def initPopulation(npop, data_, n_clusters):
     return [Individual(data_, n_clusters, []) for i in range(0, npop)]
