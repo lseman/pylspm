@@ -9,7 +9,7 @@ import numpy as np
 import scipy as sp
 import scipy.stats
 from qpLRlib4 import otimiza, plotaIC
-#import statsmodels.api as sm
+import statsmodels.api as sm
 import scipy.linalg
 from collections import Counter
 
@@ -59,9 +59,8 @@ class PyLSpm(object):
             totalblock += block
             AVEmean[self.latent[i]] = AVEmean[self.latent[i]] * block
 
-        AVEmean = np.sum(AVEmean)/totalblock
+        AVEmean = np.sum(AVEmean) / totalblock
         return np.sqrt(AVEmean * r2mean)
-
 
     def endoexo(self):
         exoVar = []
@@ -276,7 +275,7 @@ class PyLSpm(object):
 
     def htmt(self):
 
-        htmt_ = pd.DataFrame(pd.DataFrame.corr(self.data),
+        htmt_ = pd.DataFrame(pd.DataFrame.corr(self.data_),
                              index=self.manifests, columns=self.manifests)
 
         mean = []
@@ -300,7 +299,7 @@ class PyLSpm(object):
         for i in range(self.lenlatent ** 2):
             block = (htmt_.ix[allBlocks[comb[i][1]],
                               allBlocks[comb[i][0]]]).values
-            block[block == 1] = np.nan
+#            block[block == 1] = np.nan
             comb__.append(np.nanmean(block))
 
         htmt__ = np.divide(comb__, comb_)
@@ -308,7 +307,7 @@ class PyLSpm(object):
         htmt__[where_are_NaNs] = 0
 
         htmt = pd.DataFrame(np.tril(htmt__.reshape(
-            (self.lenlatent, self.lenlatent))), index=self.latent, columns=self.latent)
+            (self.lenlatent, self.lenlatent)), k=-1), index=self.latent, columns=self.latent)
 
         return htmt
 
@@ -392,6 +391,22 @@ class PyLSpm(object):
 
         return alpha.T
 
+    def vif(self):
+        vif = []
+        totalmanifests = range(len(self.data_.columns))
+        for i in range(len(totalmanifests)):
+            independent = [x for j, x in enumerate(totalmanifests) if j != i]
+            coef, resid = np.linalg.lstsq(
+                self.data_.ix[:, independent], self.data_.ix[:, i])[:2]
+
+            r2 = 1 - resid / \
+                (self.data_.ix[:, i].size * self.data_.ix[:, i].var())
+
+            vif.append(1 / (1 - r2))
+
+        vif = pd.DataFrame(vif, index=self.manifests)
+        return vif
+
     def __init__(self, dados, LVcsv, Mcsv, scheme='path', regression='ols', h=0, maximo=300, stopCrit=7, HOC='false'):
         self.data = dados
         self.LVcsv = LVcsv
@@ -416,6 +431,7 @@ class PyLSpm(object):
 
         latent_ = LVariables.values.flatten('F')
         latent__ = np.unique(latent_, return_index=True)[1]
+#        latent = np.unique(latent_)
         latent = [latent_[i] for i in sorted(latent__)]
 
         self.lenlatent = len(latent)

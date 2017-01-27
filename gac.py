@@ -1,3 +1,7 @@
+# C. M. Ringle, M. Sarstedt, R. Schlittgen, and C. R. Taylor, “PLS path
+# modeling and evolutionary segmentation,” J. Bus. Res., vol. 66, no. 9,
+# pp. 1318–1324, Sep. 2013.
+
 from random import randint, uniform
 from copy import deepcopy
 from sys import argv
@@ -67,6 +71,7 @@ class Individual(object):
                 while self.genes[g] == oldgene:
                     self.genes[g] = random.randrange(n_clusters)
 
+
 def initPopulation(npop, data_, n_clusters):
     return [Individual(data_, n_clusters, []) for i in range(0, npop)]
 
@@ -77,10 +82,12 @@ def crossover(parent1, parent2, n_clusters):
 
 
 def roulettewheel(pop, fit):
+    fit = fit - min(fit)
     sumf = sum(fit)
     prob = [(item + sum(fit[:index])) / sumf for index, item in enumerate(fit)]
-    prob = prob / sum(prob)
-    return pop[int(BinSearch(prob, uniform(0, 1), 0, len(prob) - 1))]
+    prob_ = uniform(0, 1)
+    individuo = (int(BinSearch(prob, prob_, 0, len(prob) - 1)))
+    return pop[individuo]
 
 
 def gac(npop, n_clusters, pcros, pmut, maxit, data_,
@@ -109,6 +116,7 @@ def gac(npop, n_clusters, pcros, pmut, maxit, data_,
                 parent2 = roulettewheel(pop, fit)
                 while parent2 == parent1:
                     parent2 = roulettewheel(pop, fit)
+                    print('cagada aqui')
                 child1, child2 = crossover(parent1, parent2, n_clusters)
                 new.append(child1)
                 if len(new) < len(pop):

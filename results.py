@@ -1,7 +1,7 @@
 class PyLSpmHTML(object):
 
     def __init__(self, plsobject):
-        self.path_matrix = plsobject.path_matrix
+        self.path_matrix = plsobject.path_matrix.T
         self.path_matrix_low = plsobject.path_matrix_low
         self.path_matrix_high = plsobject.path_matrix_high
         self.path_matrix_range = plsobject.path_matrix_range

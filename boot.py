@@ -7,7 +7,6 @@ import pandas
 import numpy as np
 from pylspm import PyLSpm
 
-
 class PyLSboot(object):
 
     def do_work(self, item):

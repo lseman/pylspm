@@ -35,13 +35,13 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    mode = 4
+    mode = 0
     nrboot = 10
     cores = 8
 
     diff = 'none'
     method = 'percentile'
-    data = 'dados_miss.csv'
+    data = 'dados_reag.csv'
     lvmodel = 'lvnew.csv'
     mvmodel = 'mvnew.csv'
     scheme = 'path'
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     if (mode == 0):
 
         tese = PyLSpm(data_, lvmodel, mvmodel, scheme,
-                      regression, 0, 100, HOC='true')
+                      regression, 0, 100, HOC='false')
 
         if (diff == 'sample'):
             tese.sampleSize()
@@ -97,10 +97,11 @@ if __name__ == '__main__':
     elif (mode == 4):
         n_individuals = 3
         n_clusters = 3
-        p_crossover = 0.6
-        p_mutation = 1-((0.3)**(1.0/(1.0*len(data_))))
-        print(p_mutation)
-        iterations = 5
+        p_crossover = 0.85
+#        p_mutation = 1-((0.3)**(1.0/(1.0*len(data_))))
+        p_mutation = 0.01
+#        print(p_mutation)
+        iterations = 50
 
         gac(n_individuals, n_clusters,
             p_crossover, p_mutation, iterations,

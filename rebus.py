@@ -1,3 +1,6 @@
+# L. Trinchera, “Unobserved Heterogeneity in Structural Equation Models: A
+# New Approach to Latent Class Detection in PLS Path Modeling,” 2007.
+
 from multiprocessing import Pool, freeze_support
 
 import numpy as np
@@ -14,6 +17,8 @@ from scipy.cluster.hierarchy import fcluster
 from pylspm import PyLSpm
 from results import PyLSpmHTML
 from boot import PyLSboot
+from mga import mga
+from itertools import combinations
 
 
 def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
@@ -41,6 +46,7 @@ def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
         dataSplit = pd.concat([data, clusters], axis=1)
 
         nk = max(clusters['Split'])
+
         rebus = []
         for i in range(nk):
             data_ = (dataSplit.loc[dataSplit['Split']
@@ -138,3 +144,12 @@ def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
         print(len(data_))
         print(rebus[i].path_matrix)
         print(rebus[i].gof())
+
+    # Automatiza multi-group
+
+    allCombs = list(combinations(range(1, nk + 1), 2))
+
+    for i in range(len(allCombs)):
+        mga(50, 8, dataSplit, lvmodel,
+            mvmodel, scheme, regression, 0, 100, g1=allCombs[i][0], g2=allCombs[i][1],
+            segmento='Split')

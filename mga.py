@@ -7,7 +7,7 @@ from scipy.stats import norm
 
 from pylspm import PyLSpm
 from boot import PyLSboot
-
+from itertools import combinations
 
 def trataGroups(objeto):
 
@@ -22,10 +22,10 @@ def trataGroups(objeto):
     return [mean_, deviation_]
 
 def mga(nrboot, cores, data_, lvmodel,
-        mvmodel, scheme, regression, h='0', maxit='100', g1=0, g2=1, method='non-parametric'):
+        mvmodel, scheme, regression, h='0', maxit='100', g1=0, g2=1, segmento='SEM', method='non-parametric'):
 
-    data1 = (data_.loc[data_['SEM'] == g1]).drop('SEM', axis=1)
-    data2 = (data_.loc[data_['SEM'] == g2]).drop('SEM', axis=1)
+    data1 = (data_.loc[data_[segmento] == g1]).drop(segmento, axis=1)
+    data2 = (data_.loc[data_[segmento] == g2]).drop(segmento, axis=1)
 
     estimData1 = PyLSboot(nrboot, cores, data1, lvmodel,
                           mvmodel, scheme, regression, h, maxit)
@@ -82,7 +82,9 @@ def mga(nrboot, cores, data_, lvmodel,
                     pval.ix[i, j] = scipy.stats.t.sf(
                         tStat.ix[i, j], df.ix[i, j])
 
+    print('t-stat')
     print(tStat)
+    print('p-value')
     print(pval)
 
     print('Paths')
