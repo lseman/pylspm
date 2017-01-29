@@ -35,13 +35,13 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    mode = 0
+    mode = 4
     nrboot = 10
     cores = 8
 
     diff = 'none'
     method = 'percentile'
-    data = 'dados_reag.csv'
+    data = 'dados_miss.csv'
     lvmodel = 'lvnew.csv'
     mvmodel = 'mvnew.csv'
     scheme = 'path'
@@ -95,13 +95,13 @@ if __name__ == '__main__':
             mvmodel, scheme, regression, 0, 100, g1=0, g2=1)
 
     elif (mode == 4):
-        n_individuals = 3
+        n_individuals = 20
         n_clusters = 3
         p_crossover = 0.85
 #        p_mutation = 1-((0.3)**(1.0/(1.0*len(data_))))
         p_mutation = 0.01
 #        print(p_mutation)
-        iterations = 50
+        iterations = 100
 
         gac(n_individuals, n_clusters,
             p_crossover, p_mutation, iterations,

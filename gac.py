@@ -12,8 +12,10 @@ import pandas as pd
 import random
 
 from pylspm import PyLSpm
+from boot import PyLSboot
 
 sys.setrecursionlimit(1500)
+
 
 def BinSearch(prob, p, imin, imax):
     imid = (imin + imax) / 2
@@ -84,25 +86,44 @@ def crossover(parent1, parent2, n_clusters):
 def roulettewheel(pop, fit):
     fit = fit - min(fit)
     sumf = sum(fit)
+    if(sumf == 0):
+        return pop[0]
     prob = [(item + sum(fit[:index])) / sumf for index, item in enumerate(fit)]
     prob_ = uniform(0, 1)
+#    print(prob)
     individuo = (int(BinSearch(prob, prob_, 0, len(prob) - 1)))
     return pop[individuo]
+
+
+def selectOne(pop, fit):
+    fit = fit - min(fit)
+    fit = fit / sum(fit)
+    max = sum([fitness for fitness in fit])
+    print('max')
+    print(max)
+    pick = random.uniform(0, max)
+    current = 0
+    for i in range(len(pop)):
+        current += fit[i]
+        if current > pick:
+            print(i)
+            return pop[i]
 
 
 def gac(npop, n_clusters, pcros, pmut, maxit, data_,
         lvmodel, mvmodel, scheme, regression):
 
     pop = initPopulation(npop, data_, n_clusters)
-
-    fit = [indiv.fitness(data_, n_clusters, lvmodel, mvmodel, scheme, regression)
-           for indiv in pop]
-    bestfit = [pop[np.argmax(fit)], max(fit)]
+    bestfit = [0, 0]
 
     for i in range(0, maxit):
         print("Iteration %s" % (i + 1))
-        fit = [indiv.fitness(data_, n_clusters, lvmodel, mvmodel, scheme,
-                             regression) for indiv in pop]
+#        fit = [indiv.fitness(data_, n_clusters, lvmodel, mvmodel, scheme,
+#                             regression) for indiv in pop]
+
+        fit_ = PyLSboot(len(pop), 8, data_, lvmodel,
+                    mvmodel, scheme, regression, 0, 100, nclusters = n_clusters, population = pop)
+        fit = fit_.gac()
 
         new = []
         while len(new) < len(pop):
@@ -128,6 +149,7 @@ def gac(npop, n_clusters, pcros, pmut, maxit, data_,
 
         pop = deepcopy(new)
 
+        # elitism
         if max(fit) > bestfit[1]:
             bestfit = [pop[np.argmax(fit)], max(fit)]
 

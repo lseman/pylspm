@@ -417,7 +417,6 @@ class PyLSpm(object):
         self.scheme = scheme
         self.regression = regression
 
-        self.trick = 'no'
         contador = 0
         convergiu = 0
 
@@ -596,7 +595,6 @@ class PyLSpm(object):
 
         # Bootstraping trick
         if(np.isnan(outer_weights).any().any()):
-            self.trick = 'descarta'
             return None
 
         fscores = pd.DataFrame.dot(data_, outer_weights)
