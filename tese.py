@@ -18,6 +18,8 @@ from blindfolding import blindfolding
 from bootstraping import bootstrap
 from mga import mga
 from gac import gac
+from pso import pso
+from bac import bac
 
 if __name__ == '__main__':
     freeze_support()
@@ -35,11 +37,11 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    mode = 4
+    mode = 0
     nrboot = 10
     cores = 8
 
-    diff = 'none'
+    diff = 'rebus'
     method = 'percentile'
     data = 'dados_miss.csv'
     lvmodel = 'lvnew.csv'
@@ -61,10 +63,12 @@ if __name__ == '__main__':
 
     # Go!
 
+#    data_ = data_.drop('SEM', axis=1)
+
     if (mode == 0):
 
         tese = PyLSpm(data_, lvmodel, mvmodel, scheme,
-                      regression, 0, 100, HOC='false')
+                      regression, 0, 100, HOC='true')
 
         if (diff == 'sample'):
             tese.sampleSize()
@@ -78,6 +82,9 @@ if __name__ == '__main__':
         elif (diff == 'rebus'):
             rebus(tese.residuals()[0], data_, tese.data,
                   lvmodel, mvmodel, scheme, regression)
+
+#        print(tese.path_matrix)
+        print(tese.residuals()[3])
 
         imprime = PyLSpmHTML(tese)
         imprime.generate()
@@ -105,4 +112,30 @@ if __name__ == '__main__':
 
         gac(n_individuals, n_clusters,
             p_crossover, p_mutation, iterations,
+            data_, lvmodel, mvmodel, scheme, regression)
+
+    elif (mode == 5):
+        n_individuals = 4
+        n_clusters = 3
+        in_max = 0.9
+        in_min = 0.5
+        c1 = 1.5
+        c2 = 1.5
+        iterations = 4
+
+        pso(n_individuals, n_clusters,
+            in_max, in_min, c1, c2, iterations,
+            data_, lvmodel, mvmodel, scheme, regression)
+
+    elif (mode == 5):
+        n_players = 4
+        n_clusters = 3
+        in_max = 0.9
+        in_min = 0.5
+        c1 = 1.5
+        c2 = 1.5
+        iterations = 4
+
+        bac(n_players, n_clusters,
+            in_max, in_min, c1, c2, iterations,
             data_, lvmodel, mvmodel, scheme, regression)

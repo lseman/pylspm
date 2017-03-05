@@ -9,7 +9,7 @@ import numpy as np
 import scipy as sp
 import scipy.stats
 from qpLRlib4 import otimiza, plotaIC
-import statsmodels.api as sm
+#import statsmodels.api as sm
 import scipy.linalg
 from collections import Counter
 
@@ -79,7 +79,7 @@ class PyLSpm(object):
         endoVar = []
 
         outer_residuals = self.data.copy()
-        comun_ = self.data.copy()
+#        comun_ = self.data.copy()
 
         for i in range(self.lenlatent):
             if(self.latent[i] in self.LVariables['target'].values):
@@ -102,7 +102,7 @@ class PyLSpm(object):
 
             outer_residuals.ix[:, block] = self.data_.ix[
                 :, block] - outer_
-            comun_.ix[:, block] = outer_
+#            comun_.ix[:, block] = outer_
 
         inner_residuals = self.fscores[endoVar]
         inner_ = pd.DataFrame.dot(self.fscores, self.path_matrix.ix[endoVar].T)
@@ -112,9 +112,16 @@ class PyLSpm(object):
 
         mean_ = np.mean(self.data, 0)
 
-        comun_ = comun_.apply(lambda row: row + mean_, axis=1)
+#        comun_ = comun_.apply(lambda row: row + mean_, axis=1)
 
-        return residuals, outer_residuals, inner_residuals, comun_
+        sumOuterResid = pd.DataFrame.sum(
+            pd.DataFrame.sum(outer_residuals**2))
+        sumInnerResid = pd.DataFrame.sum(
+            pd.DataFrame.sum(inner_residuals**2))
+
+        divFun = sumOuterResid + sumOuterResid
+
+        return residuals, outer_residuals, inner_residuals, divFun
 
     def srmr(self):
         srmr = (self.empirical() - self.implied())

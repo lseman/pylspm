@@ -36,7 +36,8 @@ def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
     plt.show()
     max_d = 17
     clusters = fcluster(Z, max_d, criterion='distance')
-
+    print(clusters)
+'''
     while True:
         clusters = pd.DataFrame(clusters)
         clusters.columns = ['Split']
@@ -144,6 +145,7 @@ def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
         print(len(data_))
         print(rebus[i].path_matrix)
         print(rebus[i].gof())
+        print(rebus[i].residuals()[3])
 
     # Automatiza multi-group
 
@@ -153,3 +155,4 @@ def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
         mga(50, 8, dataSplit, lvmodel,
             mvmodel, scheme, regression, 0, 100, g1=allCombs[i][0], g2=allCombs[i][1],
             segmento='Split')
+'''

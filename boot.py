@@ -46,6 +46,32 @@ class PyLSboot(object):
                 sumInnerResid = pd.DataFrame.sum(
                     pd.DataFrame.sum(results[i].residuals()[2]**2))
                 f1.append(sumOuterResid + sumInnerResid)
+                print(sumOuterResid + sumInnerResid)
+            except:
+                f1.append(10000)
+        print((1 / np.sum(f1)))
+        return (1 / np.sum(f1))
+
+    def do_work_pso(self, item):
+        output = pd.DataFrame(self.population[item].position)
+        output.columns = ['Split']
+        dataSplit = pd.concat([self.data, output], axis=1)
+        f1 = []
+        results = []
+        for i in range(self.nclusters):
+            dataSplited = (dataSplit.loc[dataSplit['Split']
+                                         == i]).drop('Split', axis=1)
+            dataSplited.index = range(len(dataSplited))
+
+            try:
+                results.append(PyLSpm(dataSplited, self.LVcsv, self.Mcsv, self.scheme,
+                                      self.reg, 0, 50, HOC='true'))
+
+                sumOuterResid = pd.DataFrame.sum(
+                    pd.DataFrame.sum(results[i].residuals()[1]**2))
+                sumInnerResid = pd.DataFrame.sum(
+                    pd.DataFrame.sum(results[i].residuals()[2]**2))
+                f1.append(sumOuterResid + sumInnerResid)
             except:
                 f1.append(10000)
         print((1 / np.sum(f1)))
@@ -87,6 +113,13 @@ class PyLSboot(object):
     def gac(self):
         p = Pool(self.cores)
         result = p.map(self.do_work_ga, range(self.br))
+        p.close()
+        p.join()
+        return result
+
+    def pso(self):
+        p = Pool(self.cores)
+        result = p.map(self.do_work_pso, range(self.br))
         p.close()
         p.join()
         return result

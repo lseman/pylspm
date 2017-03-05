@@ -1,9 +1,10 @@
 # PLS-PM genetic algorithm clustering
 # Author: Laio Oriel Seman
 
-# C. M. Ringle, M. Sarstedt, R. Schlittgen, and C. R. Taylor, “PLS path
-# modeling and evolutionary segmentation,” J. Bus. Res., vol. 66, no. 9,
-# pp. 1318–1324, Sep. 2013.
+# Demasi, P. Heurísticas Baseadas em Apostas para Problemas de Otimização
+# Combinatória. Tese (Doutorado em Informática) – Universidade Federal do
+# Riode Janeiro, Instituto de Matemática, Programa de Pós-Graduação em
+# Informática, Rio de Janeiro, 2015.
 
 from random import randint, uniform
 from copy import deepcopy
@@ -35,15 +36,15 @@ def BinSearch(prob, p, imin, imax):
 
 class Individual(object):
 
-    def __init__(self, data_, n_clusters, genes):
-        self.genes = genes
-        if not self.genes:
+    def __init__(self, data_, n_clusters, playes):
+        self.playes = playes
+        if not self.playes:
             for i in range(len(data_)):
-                self.genes.append(random.randrange(n_clusters))
+                self.playes.append(random.randrange(n_clusters))
 
     def fitness(self, data_, n_clusters, lvmodel, mvmodel, scheme, regression):
 
-        output = pd.DataFrame(self.genes)
+        output = pd.DataFrame(self.playes)
         output.columns = ['Split']
         dataSplit = pd.concat([data_, output], axis=1)
         f1 = []
@@ -69,12 +70,12 @@ class Individual(object):
         return (1 / np.sum(f1))
 
     def mutation(self, pmut, n_clusters):
-        for g, gene in enumerate(self.genes):
+        for g, gene in enumerate(self.playes):
             if uniform(0, 1) <= pmut:
-                oldgene = self.genes[g]
+                oldgene = self.playes[g]
                 # garante mutation diferente
-                while self.genes[g] == oldgene:
-                    self.genes[g] = random.randrange(n_clusters)
+                while self.playes[g] == oldgene:
+                    self.playes[g] = random.randrange(n_clusters)
 
 
 def initPopulation(npop, data_, n_clusters):
@@ -82,8 +83,8 @@ def initPopulation(npop, data_, n_clusters):
 
 
 def crossover(parent1, parent2, n_clusters):
-    point = randint(1, len(parent1.genes) - 2)
-    return Individual(None, n_clusters, parent1.genes[:point] + parent2.genes[point:]), Individual(None, n_clusters, parent2.genes[:point] + parent1.genes[point:])
+    point = randint(1, len(parent1.playes) - 2)
+    return Individual(None, n_clusters, parent1.playes[:point] + parent2.playes[point:]), Individual(None, n_clusters, parent2.playes[:point] + parent1.playes[point:])
 
 
 def roulettewheel(pop, fit):
@@ -97,24 +98,7 @@ def roulettewheel(pop, fit):
     individuo = (int(BinSearch(prob, prob_, 0, len(prob) - 1)))
     return pop[individuo]
 
-'''
-def selectOne(pop, fit):
-    fit = fit - min(fit)
-    fit = fit / sum(fit)
-    max = sum([fitness for fitness in fit])
-    print('max')
-    print(max)
-    pick = random.uniform(0, max)
-    current = 0
-    for i in range(len(pop)):
-        current += fit[i]
-        if current > pick:
-            print(i)
-            return pop[i]
-'''
-
-
-def gac(npop, n_clusters, pcros, pmut, maxit, data_,
+def bac(npop, n_clusters, pcros, pmut, maxit, data_,
         lvmodel, mvmodel, scheme, regression):
 
     pop = initPopulation(npop, data_, n_clusters)
@@ -157,9 +141,9 @@ def gac(npop, n_clusters, pcros, pmut, maxit, data_,
             bestfit = [pop[np.argmax(fit)], max(fit)]
 
     print("\nFitness = %s" % bestfit[1])
-    print(bestfit[0].genes)
+    print(bestfit[0].playes)
 
-    output = pd.DataFrame(bestfit[0].genes)
+    output = pd.DataFrame(bestfit[0].playes)
     output.columns = ['Split']
     dataSplit = pd.concat([data_, output], axis=1)
 
@@ -174,4 +158,3 @@ def gac(npop, n_clusters, pcros, pmut, maxit, data_,
 
         print(results[i].path_matrix)
         print(results[i].gof())
-        print(results[i].residuals()[3])
