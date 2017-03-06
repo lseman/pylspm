@@ -55,22 +55,22 @@ def pso(npart, n_clusters, in_max, in_min, c1, c2, maxit,  data_,
 
         # update velocity and position
         for particle in swarm:
-            particle.velocity = inertia * np.array(particle.velocity) + c1 * np.array(rho1) * np.array(np.array(
+            particle.velocity = 0*inertia * np.array(particle.velocity) + c1 * np.array(rho1) * np.array(np.array(
                 particle.best) - np.array(particle.position)) + c2 * np.array(rho2) * np.array(np.array(bestfit[0].position) - np.array(particle.position))
 
 #            print(particle.velocity)
-#            print(np.round(particle.velocity))
 
-            particle.velocity = np.round(particle.velocity)
+            particle.position += particle.velocity
 
-            particle.position =  np.array(
-                particle.position) + np.array(particle.velocity)
-
-            print(particle.position)
+            for j in range(len(particle.position)):
+                if particle.position[j] <= 0:
+                    particle.position[j] = 0
+                elif particle.position[j] > (n_clusters-1):
+                    particle.position[j] = (n_clusters-1)
 
             particle.position = np.round(particle.position)
-
-            print(np.round(particle.position))
+#            print('corrigido')
+#            print(particle.position)
 
     fit_ = PyLSboot(len(swarm), 8, data_, lvmodel,
                         mvmodel, scheme, regression, 0, 100, nclusters=n_clusters, population=swarm)
@@ -81,8 +81,21 @@ def pso(npart, n_clusters, in_max, in_min, c1, c2, maxit,  data_,
     print("\nFitness = %s" % bestfit[1])
 
     # return best cluster
-    return bestfit[0].position
+    print(bestfit[0].position)
 
-if __name__ == '__main__':
-    print(PSO(int(argv[1]), int(argv[2]), float(argv[3]), float(
-        argv[4]), float(argv[5]), float(argv[6]), int(argv[7]), argv[8]))
+    output = pd.DataFrame(bestfit[0].position)
+    output.columns = ['Split']
+    dataSplit = pd.concat([data_, output], axis=1)
+
+    # Return best clusters path matrix
+    results = []
+    for i in range(n_clusters):
+        dataSplited = (dataSplit.loc[dataSplit['Split']
+                                     == i]).drop('Split', axis=1)
+        dataSplited.index = range(len(dataSplited))
+        results.append(PyLSpm(dataSplited, lvmodel, mvmodel, scheme,
+                              regression, 0, 100, HOC='true'))
+
+        print(results[i].path_matrix)
+        print(results[i].gof())
+        print(results[i].residuals()[3])

@@ -163,7 +163,7 @@ def gac(npop, n_clusters, pcros, pmut, maxit, data_,
     output.columns = ['Split']
     dataSplit = pd.concat([data_, output], axis=1)
 
-    # Return best clusters path matrix
+    # return best clusters path matrix
     results = []
     for i in range(n_clusters):
         dataSplited = (dataSplit.loc[dataSplit['Split']

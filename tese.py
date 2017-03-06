@@ -19,7 +19,7 @@ from bootstraping import bootstrap
 from mga import mga
 from gac import gac
 from pso import pso
-from bac import bac
+#from bac import bac
 
 if __name__ == '__main__':
     freeze_support()
@@ -37,11 +37,11 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    mode = 0
+    mode = 5
     nrboot = 10
     cores = 8
 
-    diff = 'rebus'
+    diff = 'none'
     method = 'percentile'
     data = 'dados_miss.csv'
     lvmodel = 'lvnew.csv'
@@ -115,27 +115,25 @@ if __name__ == '__main__':
             data_, lvmodel, mvmodel, scheme, regression)
 
     elif (mode == 5):
-        n_individuals = 4
+        n_individuals = 10
         n_clusters = 3
         in_max = 0.9
         in_min = 0.5
         c1 = 1.5
         c2 = 1.5
-        iterations = 4
+        iterations = 10
 
         pso(n_individuals, n_clusters,
             in_max, in_min, c1, c2, iterations,
             data_, lvmodel, mvmodel, scheme, regression)
 
-    elif (mode == 5):
+    elif (mode == 6):
         n_players = 4
         n_clusters = 3
-        in_max = 0.9
-        in_min = 0.5
-        c1 = 1.5
-        c2 = 1.5
-        iterations = 4
+        p_crossover = 0.85
+        p_mutation = 0.01
+        iterations = 3
 
         bac(n_players, n_clusters,
-            in_max, in_min, c1, c2, iterations,
+            p_crossover, p_mutation, iterations,
             data_, lvmodel, mvmodel, scheme, regression)

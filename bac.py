@@ -69,34 +69,8 @@ class Individual(object):
         print((1 / np.sum(f1)))
         return (1 / np.sum(f1))
 
-    def mutation(self, pmut, n_clusters):
-        for g, gene in enumerate(self.playes):
-            if uniform(0, 1) <= pmut:
-                oldgene = self.playes[g]
-                # garante mutation diferente
-                while self.playes[g] == oldgene:
-                    self.playes[g] = random.randrange(n_clusters)
-
-
 def initPopulation(npop, data_, n_clusters):
     return [Individual(data_, n_clusters, []) for i in range(0, npop)]
-
-
-def crossover(parent1, parent2, n_clusters):
-    point = randint(1, len(parent1.playes) - 2)
-    return Individual(None, n_clusters, parent1.playes[:point] + parent2.playes[point:]), Individual(None, n_clusters, parent2.playes[:point] + parent1.playes[point:])
-
-
-def roulettewheel(pop, fit):
-    fit = fit - min(fit)
-    sumf = sum(fit)
-    if(sumf == 0):
-        return pop[0]
-    prob = [(item + sum(fit[:index])) / sumf for index, item in enumerate(fit)]
-    prob_ = uniform(0, 1)
-#    print(prob)
-    individuo = (int(BinSearch(prob, prob_, 0, len(prob) - 1)))
-    return pop[individuo]
 
 def bac(npop, n_clusters, pcros, pmut, maxit, data_,
         lvmodel, mvmodel, scheme, regression):
@@ -106,33 +80,34 @@ def bac(npop, n_clusters, pcros, pmut, maxit, data_,
 
     for i in range(0, maxit):
         print("Iteration %s" % (i + 1))
-#        fit = [indiv.fitness(data_, n_clusters, lvmodel, mvmodel, scheme,
-#                             regression) for indiv in pop]
 
+        # Create mask
+        mask = []
+        for j in range(len(data_)):
+            mask.append(random.randrange(n_clusters))
+
+        # Possible solutions
+        print('Possible solutions')
+        print(n_clusters**len(data_))
+
+        # Calculate fitness
         fit_ = PyLSboot(len(pop), 8, data_, lvmodel,
                         mvmodel, scheme, regression, 0, 100, nclusters=n_clusters, population=pop)
         fit = fit_.gac()
+        # calcular w
 
-        new = []
-        while len(new) < len(pop):
+        m = ?
+        for j in range(m):
+            w = atualiza
 
-            # selection
-            parent1 = roulettewheel(pop, fit)
-            p = uniform(0, 1)
+        for j in range(len(pop)):
+            for k in range():
+                p =
+                w = 
+                B = 
+                aposte B
 
-            # genetic operators
-            if p <= pcros:
-                parent2 = roulettewheel(pop, fit)
-#                while parent2 == parent1:
-#                    parent2 = roulettewheel(pop, fit)
-                child1, child2 = crossover(parent1, parent2, n_clusters)
-                new.append(child1)
-                if len(new) < len(pop):
-                    new.append(child2)
-            else:
-                child = deepcopy(parent1)
-                child.mutation(pmut, n_clusters)
-                new.append(child)
+
 
         pop = deepcopy(new)
 
