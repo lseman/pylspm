@@ -119,7 +119,7 @@ class PyLSpm(object):
         sumInnerResid = pd.DataFrame.sum(
             pd.DataFrame.sum(inner_residuals**2))
 
-        divFun = sumOuterResid + sumOuterResid
+        divFun = sumOuterResid + sumInnerResid
 
         return residuals, outer_residuals, inner_residuals, divFun
 

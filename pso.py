@@ -1,12 +1,12 @@
 # PLS-PM particle swarm clustering
 # Author: Laio Oriel Seman
 
+# Based on https://github.com/liviaalmeida/clustering
+
 from random import randint, uniform
 from copy import deepcopy
-from sys import argv
 import numpy as np
 from numpy import inf
-import sys
 import pandas as pd
 import random
 
@@ -22,24 +22,22 @@ class Particle(object):
             for i in range(len(data_)):
                 self.position.append(random.randrange(n_clusters))
         print(self.position)
-        self.velocity = [0 for cluster in self.position]
+
+        self.velocity = [0 for clusterPoint in self.position]
         self.best = deepcopy(self.position)
         self.bestfit = 0
 
 
-def PSOPopulationInit(npart, x, n_clusters):
+def PSOSwarmInit(npart, x, n_clusters):
     return [Particle(x, n_clusters) for i in range(0, npart)]
 
 
 def pso(npart, n_clusters, in_max, in_min, c1, c2, maxit,  data_,
         lvmodel, mvmodel, scheme, regression):
 
-    swarm = PSOPopulationInit(npart, data_, n_clusters)
+    swarm = PSOSwarmInit(npart, data_, n_clusters)
 
     bestfit = [0, 0]
-
-#    rho1 = [uniform(0, 1) for i in range(0, len(data_))]
-#    rho2 = [uniform(0, 1) for i in range(0, len(data_))]
 
     for i in range(0, maxit):
 

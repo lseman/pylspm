@@ -1,9 +1,10 @@
 # PLS-PM genetic algorithm clustering
 # Author: Laio Oriel Seman
 
-# C. M. Ringle, M. Sarstedt, R. Schlittgen, and C. R. Taylor, “PLS path
-# modeling and evolutionary segmentation,” J. Bus. Res., vol. 66, no. 9,
-# pp. 1318–1324, Sep. 2013.
+# RINGLE, C. M. et al. PLS path modeling and evolutionary segmentation.
+# Journal of Business Research, v. 66, n. 9, p. 1318–1324, set. 2013.
+
+# Based on https://github.com/liviaalmeida/clustering
 
 from random import randint, uniform
 from copy import deepcopy
@@ -112,6 +113,7 @@ def selectOne(pop, fit):
             print(i)
             return pop[i]
 '''
+
 
 def gac(npop, n_clusters, pcros, pmut, maxit, data_,
         lvmodel, mvmodel, scheme, regression):

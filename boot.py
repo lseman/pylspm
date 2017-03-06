@@ -41,12 +41,8 @@ class PyLSboot(object):
                 results.append(PyLSpm(dataSplited, self.LVcsv, self.Mcsv, self.scheme,
                                       self.reg, 0, 50, HOC='true'))
 
-                sumOuterResid = pd.DataFrame.sum(
-                    pd.DataFrame.sum(results[i].residuals()[1]**2))
-                sumInnerResid = pd.DataFrame.sum(
-                    pd.DataFrame.sum(results[i].residuals()[2]**2))
-                f1.append(sumOuterResid + sumInnerResid)
-                print(sumOuterResid + sumInnerResid)
+                resid = results[i].residuals()[3]
+                f1.append(resid)
             except:
                 f1.append(10000)
         print((1 / np.sum(f1)))
@@ -67,11 +63,8 @@ class PyLSboot(object):
                 results.append(PyLSpm(dataSplited, self.LVcsv, self.Mcsv, self.scheme,
                                       self.reg, 0, 50, HOC='true'))
 
-                sumOuterResid = pd.DataFrame.sum(
-                    pd.DataFrame.sum(results[i].residuals()[1]**2))
-                sumInnerResid = pd.DataFrame.sum(
-                    pd.DataFrame.sum(results[i].residuals()[2]**2))
-                f1.append(sumOuterResid + sumInnerResid)
+                resid = results[i].residuals()[3]
+                f1.append(resid)
             except:
                 f1.append(10000)
         print((1 / np.sum(f1)))
