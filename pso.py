@@ -1,3 +1,6 @@
+# PLS-PM particle swarm clustering
+# Author: Laio Oriel Seman
+
 from random import randint, uniform
 from copy import deepcopy
 from sys import argv
@@ -11,7 +14,7 @@ from pylspm import PyLSpm
 from boot import PyLSboot
 
 
-class Particle (object):
+class Particle(object):
 
     def __init__(self, data_, n_clusters):
         self.position = []
@@ -35,17 +38,21 @@ def pso(npart, n_clusters, in_max, in_min, c1, c2, maxit,  data_,
 
     bestfit = [0, 0]
 
-    rho1 = [uniform(0, 1) for i in range(0, len(data_))]
-    rho2 = [uniform(0, 1) for i in range(0, len(data_))]
+#    rho1 = [uniform(0, 1) for i in range(0, len(data_))]
+#    rho2 = [uniform(0, 1) for i in range(0, len(data_))]
 
     for i in range(0, maxit):
-        inertia = (in_max - in_min) * ((maxit - i + 1) / maxit) + in_min
+
         print("Iteration %s" % (i + 1))
+
+        inertia = (in_max - in_min) * ((maxit - i + 1) / maxit) + in_min
+
         fit_ = PyLSboot(len(swarm), 8, data_, lvmodel,
                         mvmodel, scheme, regression, 0, 100, nclusters=n_clusters, population=swarm)
         fit = fit_.pso()
 
-        bestfit = [swarm[np.argmax(fit)], max(fit)]
+        if max(fit) > bestfit[1]:
+            bestfit = [swarm[np.argmax(fit)], max(fit)]
 
         # update best
         for index, particle in enumerate(swarm):
@@ -55,26 +62,28 @@ def pso(npart, n_clusters, in_max, in_min, c1, c2, maxit,  data_,
 
         # update velocity and position
         for particle in swarm:
-            particle.velocity = 0*inertia * np.array(particle.velocity) + c1 * np.array(rho1) * np.array(np.array(
-                particle.best) - np.array(particle.position)) + c2 * np.array(rho2) * np.array(np.array(bestfit[0].position) - np.array(particle.position))
 
-#            print(particle.velocity)
+            rho1 = [uniform(0, 1) for i in range(0, len(data_))]
+            rho2 = [uniform(0, 1) for i in range(0, len(data_))]
+
+            particle.velocity = inertia * np.array(particle.velocity) + (c1 * np.array(rho1) * np.array(particle.best) - np.array(
+                particle.position)) + (c2 * np.array(rho2) * (np.array(bestfit[0].position) - np.array(particle.position)))
 
             particle.position += particle.velocity
 
             for j in range(len(particle.position)):
                 if particle.position[j] <= 0:
                     particle.position[j] = 0
-                elif particle.position[j] > (n_clusters-1):
-                    particle.position[j] = (n_clusters-1)
+                elif particle.position[j] > (n_clusters - 1):
+                    particle.position[j] = (n_clusters - 1)
 
             particle.position = np.round(particle.position)
-#            print('corrigido')
-#            print(particle.position)
+            print(particle.position)
 
     fit_ = PyLSboot(len(swarm), 8, data_, lvmodel,
-                        mvmodel, scheme, regression, 0, 100, nclusters=n_clusters, population=swarm)
+                    mvmodel, scheme, regression, 0, 100, nclusters=n_clusters, population=swarm)
     fit = fit_.pso()
+
     # best so far
     if max(fit) > bestfit[1]:
         bestfit = [swarm[np.argmax(fit)], max(fit)]
@@ -87,7 +96,7 @@ def pso(npart, n_clusters, in_max, in_min, c1, c2, maxit,  data_,
     output.columns = ['Split']
     dataSplit = pd.concat([data_, output], axis=1)
 
-    # Return best clusters path matrix
+    # return best clusters path matrix
     results = []
     for i in range(n_clusters):
         dataSplited = (dataSplit.loc[dataSplit['Split']

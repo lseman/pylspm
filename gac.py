@@ -113,7 +113,6 @@ def selectOne(pop, fit):
             return pop[i]
 '''
 
-
 def gac(npop, n_clusters, pcros, pmut, maxit, data_,
         lvmodel, mvmodel, scheme, regression):
 

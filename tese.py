@@ -89,39 +89,44 @@ if __name__ == '__main__':
         imprime = PyLSpmHTML(tese)
         imprime.generate()
 
+    # Bootstrap
     elif (mode == 1):
         bootstrap(nrboot, cores, data_, lvmodel,
                   mvmodel, scheme, regression, 0, 100)
 
+    # Blindfolding
     elif (mode == 2):
         blindfolding(data_, lvmodel, mvmodel, scheme,
                      regression, 0, 100, HOC='true')
 
+    # Multigroup Analysis
     elif (mode == 3):
         mga(nrboot, cores, data_, lvmodel,
             mvmodel, scheme, regression, 0, 100, g1=0, g2=1)
 
+    # Genetic Algorithm
     elif (mode == 4):
         n_individuals = 20
         n_clusters = 3
         p_crossover = 0.85
 #        p_mutation = 1-((0.3)**(1.0/(1.0*len(data_))))
-        p_mutation = 0.01
 #        print(p_mutation)
+        p_mutation = 0.01
         iterations = 100
 
         gac(n_individuals, n_clusters,
             p_crossover, p_mutation, iterations,
             data_, lvmodel, mvmodel, scheme, regression)
 
+    # PSO
     elif (mode == 5):
-        n_individuals = 10
+        n_individuals = 3
         n_clusters = 3
         in_max = 0.9
         in_min = 0.5
         c1 = 1.5
         c2 = 1.5
-        iterations = 10
+        iterations = 3
 
         pso(n_individuals, n_clusters,
             in_max, in_min, c1, c2, iterations,
