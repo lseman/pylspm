@@ -1,15 +1,9 @@
-# Function that deletes two edges and reverses the sequence in between the
-# deleted edges
-import random
-import math
-
 from random import randint, uniform
 from copy import deepcopy
 import numpy as np
 from numpy import inf
 import pandas as pd
 import random
-import heapq
 
 from pylspm import PyLSpm
 from boot import PyLSboot
@@ -17,134 +11,101 @@ from boot import PyLSboot
 from multiprocessing import Pool, freeze_support
 
 
-class TabuSearch(object):
+def stochasticTwoOpt(perm):
+    result = perm[:]  # make a copy
+    size = len(result)
+    p1, p2 = random.randrange(0, size), random.randrange(0, size)
+    exclude = set([p1])
+    if p1 == 0:
+        exclude.add(size - 1)
+    else:
+        exclude.add(p1 - 1)
 
-    def stochasticTwoOpt(self, perm):
-        result = perm[:]  # make a copy
-        size = len(result)
-        # select indices of two random points in the tour
-        p1, p2 = random.randrange(0, size), random.randrange(0, size)
-        # do this so as not to overshoot tour boundaries
-        exclude = set([p1])
-        if p1 == 0:
-            exclude.add(size - 1)
+    if p1 == size - 1:
+        exclude.add(0)
+    else:
+        exclude.add(p1 + 1)
+
+    while p2 in exclude:
+        p2 = random.randrange(0, size)
+
+    if p2 < p1:
+        p1, p2 = p2, p1
+
+    result[p1:p2] = reversed(result[p1:p2])
+
+    return result
+
+
+def locateBestCandidate(candidates):
+    candidates.sort(key=lambda c: c[1])
+    best = candidates[0]
+    return best
+
+
+def generateCandidates(best, tabuList):
+
+    check_tabu = None
+    permutation = stochasticTwoOpt(best[0])
+
+    while check_tabu == None:
+        if permutation in tabuList:
+            permutation = stochasticTwoOpt(best[0])
         else:
-            exclude.add(p1 - 1)
+            check_tabu = 1
 
-        if p1 == size - 1:
-            exclude.add(0)
-        else:
-            exclude.add(p1 + 1)
-
-        while p2 in exclude:
-            p2 = random.randrange(0, size)
-
-        # to ensure we always have p1<p2
-        if p2 < p1:
-            p1, p2 = p2, p1
-
-        # now reverse the tour segment between p1 and p2
-        result[p1:p2] = reversed(result[p1:p2])
-
-        return result
-
-    def locateBestCandidate(self, candidates):
-        candidates.sort(key=lambda c: c["candidate"]["cost"])
-        best = candidates[0]["candidate"]
-        return best
-
-    def fit(self, node, data, nclusters, lvmodel, mvmodel, scheme, regression, goal=1000):
-        output = pd.DataFrame(node)
-        output.columns = ['Split']
-        dataSplit = pd.concat([data, output], axis=1)
-        f1 = []
-        results = []
-        for i in range(nclusters):
-            dataSplited = (dataSplit.loc[dataSplit['Split']
-                                         == i]).drop('Split', axis=1)
-            dataSplited.index = range(len(dataSplited))
-
-            try:
-                results.append(PyLSpm(dataSplited, lvmodel, mvmodel,
-                                      scheme, regression, 0, 50, HOC='true'))
-
-                resid = results[i].residuals()[3]
-                f1.append(resid)
-
-            except:
-                f1.append(10000)
-
-        cost = (np.sum(f1))
-        print(1 / cost)
-        return cost
-
-    def generateCandidates(self, item):
-
-        check_tabu = None
-        result = {}
-        permutation = self.stochasticTwoOpt(self.best["permutation"])
-
-        while check_tabu == None:
-            if permutation in self.tabuList:
-                print('deu igual')
-                permutation = self.stochasticTwoOpt(self.best["permutation"])
-            else:
-                check_tabu = 1
-
-        candidate = {}
-        candidate["permutation"] = permutation
-        candidate["cost"] = self.fit(candidate["permutation"], self.data_,
-                                self.n_clusters, self.lvmodel, self.mvmodel, self.scheme, self.regression)
-        result["candidate"] = candidate
-
-        return result
-
-    def __init__(self, tabu_size, n_children, n_clusters, n_goal, iterations, data_,
-             lvmodel, mvmodel, scheme, regression):
-
-        self.data_ = data_
-        self.lvmodel = lvmodel
-        self.mvmodel = mvmodel
-        self.scheme = scheme
-        self.n_clusters = n_clusters
-        self.n_children = n_children
-        self.tabu_size = tabu_size
-        self.regression = regression
-
-        node = []
-        for i in range(len(data_)):
-            node.append(random.randrange(n_clusters))
+    return permutation
 
 
-        self.best = {}
-        self.best["permutation"] = node
-        self.best["cost"] = self.fit(self.best["permutation"], self.data_, self.n_clusters,
-                           self.lvmodel, self.mvmodel, self.scheme, self.regression)
+def tabu(tabu_size, n_children, n_clusters, n_goal, iterations, data_,
+         lvmodel, mvmodel, scheme, regression):
 
-        print(self.best)
+    node = []
+    for i in range(len(data_)):
+        node.append(random.randrange(n_clusters))
 
-        self.tabuList = []
+    best_ = PyLSboot(1, 8, data_, lvmodel,
+                     mvmodel, scheme, regression, 0, 100, nclusters=n_clusters, population=[node])
+    best = best_.tabu()[0]
+    tabuList = []
 
-        for i in range(0, iterations):
+    for i in range(0, iterations):
 
-            print("Iteration %s" % (i + 1))
+        print("Iteration %s" % (i + 1))
+        candidates = []
 
-            candidates = []
+        for index in range(0, n_children):
+            candidates.append(generateCandidates(best, tabuList))
 
-            p = Pool(8)
-            candidates = p.map(self.generateCandidates, range(n_children))
-            p.close()
-            p.join()
+        fit_ = PyLSboot(len(candidates), 8, data_, lvmodel,
+                        mvmodel, scheme, regression, 0, 100, nclusters=n_clusters, population=candidates)
+        fit = fit_.tabu()
 
-            bestCandidate = self.locateBestCandidate(candidates)
+        bestCandidate = locateBestCandidate(fit)
 
-            if bestCandidate["cost"] < self.best["cost"]:
-                self.best = bestCandidate
-                self.tabuList.append(bestCandidate["permutation"])
-                if len(self.tabuList) > tabu_size:
-                    print('apagou 1')
-                    del self.tabuList[0]
+        if bestCandidate[1] < best[1]:
+            best = [bestCandidate[0], bestCandidate[1]]
+            tabuList.append(bestCandidate[0])
+            if len(tabuList) > tabu_size:
+                print('apagou 1')
+                del tabuList[0]
 
-            iterations -= 1
+    print("\nFitness = %s" % best[1])
+    print(bestfit[0])
 
-        return best
+    output = pd.DataFrame(best[0])
+    output.columns = ['Split']
+    dataSplit = pd.concat([data_, output], axis=1)
+
+    # return best clusters path matrix
+    results = []
+    for i in range(n_clusters):
+        dataSplited = (dataSplit.loc[dataSplit['Split']
+                                     == i]).drop('Split', axis=1)
+        dataSplited.index = range(len(dataSplited))
+        results.append(PyLSpm(dataSplited, lvmodel, mvmodel, scheme,
+                              regression, 0, 100, HOC='true'))
+
+        print(results[i].path_matrix)
+        print(results[i].gof())
+        print(results[i].residuals()[3])

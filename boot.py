@@ -70,6 +70,30 @@ class PyLSboot(object):
         print((1 / np.sum(f1)))
         return (1 / np.sum(f1))
 
+    def do_work_tabu(self, item):
+        output = pd.DataFrame(self.population[item])
+        output.columns = ['Split']
+        dataSplit = pd.concat([self.data, output], axis=1)
+        f1 = []
+        results = []
+        for i in range(self.nclusters):
+            dataSplited = (dataSplit.loc[dataSplit['Split']
+                                         == i]).drop('Split', axis=1)
+            dataSplited.index = range(len(dataSplited))
+
+            try:
+                results.append(PyLSpm(dataSplited, self.LVcsv, self.Mcsv, self.scheme,
+                                      self.reg, 0, 50, HOC='true'))
+
+                resid = results[i].residuals()[3]
+                f1.append(resid)
+            except:
+                f1.append(10000)
+
+        cost = (np.sum(f1))
+        print(1 / cost)
+        return [self.population[item], cost]
+
     def __init__(self, br, cores, dados, LVcsv, Mcsv, scheme='path', reg='ols', h=0, maximo=300, stopCrit=7, nclusters=2, population=None):
 
         self.data = dados
@@ -113,6 +137,13 @@ class PyLSboot(object):
     def pso(self):
         p = Pool(self.cores)
         result = p.map(self.do_work_pso, range(self.br))
+        p.close()
+        p.join()
+        return result
+
+    def tabu(self):
+        p = Pool(self.cores)
+        result = p.map(self.do_work_tabu, range(self.br))
         p.close()
         p.join()
         return result

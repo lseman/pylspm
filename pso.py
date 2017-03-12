@@ -1,6 +1,10 @@
 # PLS-PM particle swarm clustering
 # Author: Laio Oriel Seman
 
+# JARBOUI, B. et al. Combinatorial particle swarm optimization (CPSO) for
+# partitional clustering problem. Applied Mathematics and Computation, v.
+# 192, n. 2, p. 337–345, set. 2007.
+
 # Based on https://github.com/liviaalmeida/clustering
 
 from random import randint, uniform
@@ -83,7 +87,8 @@ def pso(npart, n_clusters, in_max, in_min, c1, c2, maxit,  data_,
                 else:
                     y = 0
 
-                particle.velocity[i] = particle.velocity[i] + (c1 * rho1[i] * (-1 - y)) + (c2 * rho2[i] * (1 - y))
+                particle.velocity[i] = particle.velocity[
+                    i] + (c1 * rho1[i] * (-1 - y)) + (c2 * rho2[i] * (1 - y))
                 lmbd = particle.velocity[i] + y
 
                 if lmbd > alfa:
@@ -100,13 +105,14 @@ def pso(npart, n_clusters, in_max, in_min, c1, c2, maxit,  data_,
                 else:
                     oldpos = particle.position[i]
                     while particle.position[i] == oldpos:
-                        particle.position[i] = random.randint(0, n_clusters-1)
+                        particle.position[i] = random.randint(
+                            0, n_clusters - 1)
 
 #            particle.S = sigmoid(particle.velocity, n_clusters)
 
 #            for j in range(len(particle.position)):
 #                particle.position[j] = np.round(
-#                    particle.S[j] + (n_clusters - 1) * sigma * np.random.randn())
+# particle.S[j] + (n_clusters - 1) * sigma * np.random.randn())
 
 #            particle.position = np.round(
 #                particle.S + (n_clusters - 1) * sigma * np.random.randn())

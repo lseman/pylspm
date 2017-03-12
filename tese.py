@@ -1,3 +1,8 @@
+# PLS-PM tabu search clustering
+# Author: Laio Oriel Seman
+
+# BROWNLEE, J. Clever Algorithms. [s.l: s.n.].
+
 from multiprocessing import Pool, freeze_support
 
 import numpy as np
@@ -19,7 +24,7 @@ from bootstraping import bootstrap
 from mga import mga
 from gac import gac
 from pso import pso
-from tabu2 import TabuSearch
+from tabu2 import tabu
 
 if __name__ == '__main__':
     freeze_support()
@@ -37,7 +42,7 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    mode = 5
+    mode = 6
     nrboot = 10
     cores = 8
 
@@ -135,11 +140,11 @@ if __name__ == '__main__':
     # Tabu
     elif (mode == 6):
         tabu_size = 10
-        n_children = 10
+        n_children = 3
         n_clusters = 3
         n_goal = 0.85
         iterations = 100
 
-        TabuSearch(tabu_size, n_children, n_clusters,
-            n_goal, iterations,
-            data_, lvmodel, mvmodel, scheme, regression)
+        tabu(tabu_size, n_children, n_clusters,
+                   n_goal, iterations,
+                   data_, lvmodel, mvmodel, scheme, regression)
