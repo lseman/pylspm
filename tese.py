@@ -19,7 +19,7 @@ from bootstraping import bootstrap
 from mga import mga
 from gac import gac
 from pso import pso
-#from bac import bac
+from tabu2 import TabuSearch
 
 if __name__ == '__main__':
     freeze_support()
@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
     # Genetic Algorithm
     elif (mode == 4):
-        n_individuals = 20
+        n_individuals = 5
         n_clusters = 3
         p_crossover = 0.85
 #        p_mutation = 1-((0.3)**(1.0/(1.0*len(data_))))
@@ -120,25 +120,26 @@ if __name__ == '__main__':
 
     # PSO
     elif (mode == 5):
-        n_individuals = 3
+        n_individuals = 5
         n_clusters = 3
         in_max = 0.9
         in_min = 0.5
         c1 = 1.5
         c2 = 1.5
-        iterations = 3
+        iterations = 100
 
         pso(n_individuals, n_clusters,
             in_max, in_min, c1, c2, iterations,
             data_, lvmodel, mvmodel, scheme, regression)
 
+    # Tabu
     elif (mode == 6):
-        n_players = 4
+        tabu_size = 10
+        n_children = 10
         n_clusters = 3
-        p_crossover = 0.85
-        p_mutation = 0.01
-        iterations = 3
+        n_goal = 0.85
+        iterations = 100
 
-        bac(n_players, n_clusters,
-            p_crossover, p_mutation, iterations,
+        TabuSearch(tabu_size, n_children, n_clusters,
+            n_goal, iterations,
             data_, lvmodel, mvmodel, scheme, regression)

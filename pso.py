@@ -24,6 +24,7 @@ class Particle(object):
         print(self.position)
 
         self.velocity = [0 for clusterPoint in self.position]
+        self.S = [0 for clusterPoint in self.position]
         self.best = deepcopy(self.position)
         self.bestfit = 0
 
@@ -32,12 +33,23 @@ def PSOSwarmInit(npart, x, n_clusters):
     return [Particle(x, n_clusters) for i in range(0, npart)]
 
 
+def sigmoid(x, M):
+    return M / (1 + np.exp(-x))
+
+
 def pso(npart, n_clusters, in_max, in_min, c1, c2, maxit,  data_,
         lvmodel, mvmodel, scheme, regression):
 
     swarm = PSOSwarmInit(npart, data_, n_clusters)
 
+    rho1 = [uniform(0, 1) for i in range(0, len(data_))]
+    rho2 = [uniform(0, 1) for i in range(0, len(data_))]
+
     bestfit = [0, 0]
+
+    alfa = 0.35
+
+    equalOpt = [-1, 1]
 
     for i in range(0, maxit):
 
@@ -61,22 +73,54 @@ def pso(npart, n_clusters, in_max, in_min, c1, c2, maxit,  data_,
         # update velocity and position
         for particle in swarm:
 
-            rho1 = [uniform(0, 1) for i in range(0, len(data_))]
-            rho2 = [uniform(0, 1) for i in range(0, len(data_))]
+            for i in range(len(particle.position)):
+                if (particle.position[i] == bestfit[0].position[i]) and (particle.position[i] == particle.best[i]):
+                    y = equalOpt[random.randint(0, 1)]
+                elif particle.position[i] == bestfit[0].position[i]:
+                    y = 1
+                elif particle.position[i] == particle.best[i]:
+                    y = -1
+                else:
+                    y = 0
 
-            particle.velocity = inertia * np.array(particle.velocity) + (c1 * np.array(rho1) * np.array(particle.best) - np.array(
-                particle.position)) + (c2 * np.array(rho2) * (np.array(bestfit[0].position) - np.array(particle.position)))
+                particle.velocity[i] = particle.velocity[i] + (c1 * rho1[i] * (-1 - y)) + (c2 * rho2[i] * (1 - y))
+                lmbd = particle.velocity[i] + y
 
-            particle.position += particle.velocity
+                if lmbd > alfa:
+                    ynew = 1
+                elif lmbd < -alfa:
+                    ynew = -1
+                else:
+                    ynew = 0
+
+                if ynew == 1:
+                    particle.position[i] = bestfit[0].position[i]
+                elif ynew == -1:
+                    particle.position[i] = particle.best[i]
+                else:
+                    oldpos = particle.position[i]
+                    while particle.position[i] == oldpos:
+                        particle.position[i] = random.randint(0, n_clusters-1)
+
+#            particle.S = sigmoid(particle.velocity, n_clusters)
+
+#            for j in range(len(particle.position)):
+#                particle.position[j] = np.round(
+#                    particle.S[j] + (n_clusters - 1) * sigma * np.random.randn())
+
+#            particle.position = np.round(
+#                particle.S + (n_clusters - 1) * sigma * np.random.randn())
+
+            """particle.position = particle.position + particle.velocity
 
             for j in range(len(particle.position)):
-                if particle.position[j] <= 0:
+                if particle.position[j] > n_clusters - 1:
+                    particle.position[j] = n_clusters - 1
+                elif particle.position[j] <= 0:
                     particle.position[j] = 0
-                elif particle.position[j] > (n_clusters - 1):
-                    particle.position[j] = (n_clusters - 1)
 
-            particle.position = np.round(particle.position)
-            print(particle.position)
+            particle.position = np.round(particle.position)"""
+#            print(particle.position)
 
     fit_ = PyLSboot(len(swarm), 8, data_, lvmodel,
                     mvmodel, scheme, regression, 0, 100, nclusters=n_clusters, population=swarm)

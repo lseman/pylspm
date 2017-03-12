@@ -70,7 +70,7 @@ class PyLSboot(object):
         print((1 / np.sum(f1)))
         return (1 / np.sum(f1))
 
-    def __init__(self, br, cores, dados, LVcsv, Mcsv, scheme='path', reg='ols', h=0, maximo=300, stopCrit=7, nclusters=2, population='none'):
+    def __init__(self, br, cores, dados, LVcsv, Mcsv, scheme='path', reg='ols', h=0, maximo=300, stopCrit=7, nclusters=2, population=None):
 
         self.data = dados
         self.LVcsv = LVcsv
