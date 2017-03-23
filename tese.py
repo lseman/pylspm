@@ -25,6 +25,7 @@ from mga import mga
 from gac import gac
 from pso import pso
 from tabu2 import tabu
+from permuta import permuta
 
 if __name__ == '__main__':
     freeze_support()
@@ -42,8 +43,8 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    mode = 6
-    nrboot = 10
+    mode = 4
+    nrboot = 100
     cores = 8
 
     diff = 'none'
@@ -70,10 +71,15 @@ if __name__ == '__main__':
 
 #    data_ = data_.drop('SEM', axis=1)
 
+#    g1 = 4
+#    segmento = 'SEM'
+#    data_ = (data_.loc[data_[segmento] == g1]).drop(segmento, axis=1)
+#    print(data_)
+
     if (mode == 0):
 
         tese = PyLSpm(data_, lvmodel, mvmodel, scheme,
-                      regression, 0, 100, HOC='true')
+                      regression, 0, 100, HOC='false', disattenuate='false')
 
         if (diff == 'sample'):
             tese.sampleSize()
@@ -89,7 +95,7 @@ if __name__ == '__main__':
                   lvmodel, mvmodel, scheme, regression)
 
 #        print(tese.path_matrix)
-        print(tese.residuals()[3])
+#        print(tese.residuals()[3])
 
         imprime = PyLSpmHTML(tese)
         imprime.generate()
@@ -109,8 +115,13 @@ if __name__ == '__main__':
         mga(nrboot, cores, data_, lvmodel,
             mvmodel, scheme, regression, 0, 100, g1=0, g2=1)
 
-    # Genetic Algorithm
+    # Permutation
     elif (mode == 4):
+        permuta(nrboot, cores, data_, lvmodel,
+            mvmodel, scheme, regression, 0, 100, g1=0, g2=1)
+
+    # GA
+    elif (mode == 5):
         n_individuals = 5
         n_clusters = 3
         p_crossover = 0.85
@@ -124,7 +135,7 @@ if __name__ == '__main__':
             data_, lvmodel, mvmodel, scheme, regression)
 
     # PSO
-    elif (mode == 5):
+    elif (mode == 6):
         n_individuals = 5
         n_clusters = 3
         in_max = 0.9
@@ -137,14 +148,12 @@ if __name__ == '__main__':
             in_max, in_min, c1, c2, iterations,
             data_, lvmodel, mvmodel, scheme, regression)
 
-    # Tabu
-    elif (mode == 6):
+    # TS
+    elif (mode == 7):
         tabu_size = 10
         n_children = 3
         n_clusters = 3
-        n_goal = 0.85
         iterations = 100
 
-        tabu(tabu_size, n_children, n_clusters,
-                   n_goal, iterations,
-                   data_, lvmodel, mvmodel, scheme, regression)
+        tabu(tabu_size, n_children, n_clusters, iterations,
+             data_, lvmodel, mvmodel, scheme, regression)

@@ -33,6 +33,8 @@ class PyLSpmHTML(object):
         self.mean = plsobject.dataInfo()[0]
         self.sd = plsobject.dataInfo()[1]
 
+        self.plsc = plsobject.disattenuate
+
     def geraInfo(self):
 
         print_matrix = """
@@ -43,9 +45,9 @@ class PyLSpmHTML(object):
                     <tr>"""
 
         linhas = ['Scheme', 'Regression', 'Latent Variables',
-                  'Manifests', 'Observations', 'SRMR', 'GoF']
+                  'Manifests', 'Observations', 'SRMR', 'GoF', 'disattenuation']
         conteudo = [(self.scheme), self.regression, len(self.path_matrix), len(
-            self.outer_loadings), len(self.fscores), round(self.srmr, 3), round(self.gof, 3)]
+            self.outer_loadings), len(self.fscores), round(self.srmr, 3), round(self.gof, 3), self.plsc]
 
         print_matrix += """</tr></thead><tbody>"""
 

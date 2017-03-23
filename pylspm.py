@@ -9,7 +9,6 @@ import numpy as np
 import scipy as sp
 import scipy.stats
 from qpLRlib4 import otimiza, plotaIC
-#import statsmodels.api as sm
 import scipy.linalg
 from collections import Counter
 
@@ -414,7 +413,68 @@ class PyLSpm(object):
         vif = pd.DataFrame(vif, index=self.manifests)
         return vif
 
-    def __init__(self, dados, LVcsv, Mcsv, scheme='path', regression='ols', h=0, maximo=300, stopCrit=7, HOC='false'):
+    def PLSc(self):
+        ##################################################
+        # PLSc
+
+        rA = self.rhoA()
+        corFalse = self.corLVs()
+
+        for i in range(self.lenlatent):
+            for j in range(self.lenlatent):
+                if i == j:
+                    corFalse.ix[i][j] = 1
+                else:
+                    corFalse.ix[i][j] = corFalse.ix[i][
+                        j] / np.sqrt(rA.ix[self.latent[i]] * rA.ix[self.latent[j]])
+
+        corTrue = np.zeros([self.lenlatent, self.lenlatent])
+        for i in range(self.lenlatent):
+            for j in range(self.lenlatent):
+                corTrue[j][i] = corFalse.ix[i][j]
+                corTrue[i][j] = corFalse.ix[i][j]
+
+        corTrue = pd.DataFrame(corTrue, corFalse.columns, corFalse.index)
+
+        # Loadings
+
+        attenuedOuter_loadings = pd.DataFrame(
+            0, index=self.manifests, columns=self.latent)
+
+        for i in range(self.lenlatent):
+            weights = pd.DataFrame(self.outer_weights[self.latent[i]])
+            weights = weights[(weights.T != 0).any()]
+            result = pd.DataFrame.dot(weights.T, weights)
+            result_ = pd.DataFrame.dot(weights, weights.T)
+
+            newLoad = (
+                weights.values * np.sqrt(rA.ix[self.latent[i]].values)) / (result.values)
+            myindex = self.Variables['measurement'][
+                self.Variables['latent'] == self.latent[i]]
+            myindex_ = self.latent[i]
+            attenuedOuter_loadings.ix[myindex.values, myindex_] = newLoad
+
+        # Path
+
+        dependent = np.unique(self.LVariables.ix[:, 'target'])
+
+        for i in range(len(dependent)):
+            independent = self.LVariables[self.LVariables.ix[
+                :, "target"] == dependent[i]]["source"]
+
+            dependent_ = corTrue.ix[dependent[i], independent]
+            independent_ = corTrue.ix[independent, independent]
+
+#            path = np.dot(np.linalg.inv(independent_),dependent_)
+            coef, resid = np.linalg.lstsq(independent_, dependent_)[:2]
+            self.path_matrix.ix[dependent[i], independent] = coef
+
+        return attenuedOuter_loadings
+
+        # End PLSc
+        ##################################################
+
+    def __init__(self, dados, LVcsv, Mcsv, scheme='path', regression='ols', h=0, maximo=300, stopCrit=7, HOC='false', disattenuate='false'):
         self.data = dados
         self.LVcsv = LVcsv
         self.Mcsv = Mcsv
@@ -423,6 +483,7 @@ class PyLSpm(object):
         self.h = h
         self.scheme = scheme
         self.regression = regression
+        self.disattenuate = disattenuate
 
         contador = 0
         convergiu = 0
@@ -630,40 +691,40 @@ class PyLSpm(object):
         # Paths
 
         r2 = pd.DataFrame(0, index=np.arange(1), columns=latent)
-        dependant = np.unique(LVariables.ix[:, 'target'])
+        dependent = np.unique(LVariables.ix[:, 'target'])
 
-        for i in range(len(dependant)):
-            independant = LVariables[LVariables.ix[
-                :, "target"] == dependant[i]]["source"]
-            dependant_ = fscores.ix[:, dependant[i]]
-            independant_ = fscores.ix[:, independant]
+        for i in range(len(dependent)):
+            independent = LVariables[LVariables.ix[
+                :, "target"] == dependent[i]]["source"]
+            dependent_ = fscores.ix[:, dependent[i]]
+            independent_ = fscores.ix[:, independent]
 
             if (self.regression == 'ols'):
                 # Path Normal
-                coef, resid = np.linalg.lstsq(independant_, dependant_)[:2]
-#                model = sm.OLS(dependant_, independant_)
+                coef, resid = np.linalg.lstsq(independent_, dependent_)[:2]
+#                model = sm.OLS(dependent_, independent_)
 #                results = model.fit()
 #                print(results.summary())
-#                r2[dependant[i]] = results.rsquared
+#                r2[dependent[i]] = results.rsquared
 
-                r2[dependant[i]] = 1 - resid / \
-                    (dependant_.size * dependant_.var())
+                r2[dependent[i]] = 1 - resid / \
+                    (dependent_.size * dependent_.var())
 
-                path_matrix.ix[dependant[i], independant] = coef
-#                pvalues.ix[dependant[i], independant] = results.pvalues
+                path_matrix.ix[dependent[i], independent] = coef
+#                pvalues.ix[dependent[i], independent] = results.pvalues
 
             elif (self.regression == 'fuzzy'):
-                size = len(independant_.columns)
-                ac, awL, awR = otimiza(dependant_, independant_, size, self.h)
+                size = len(independent_.columns)
+                ac, awL, awR = otimiza(dependent_, independent_, size, self.h)
 
-#                plotaIC(dependant_, independant_, size)
+#                plotaIC(dependent_, independent_, size)
 
                 ac, awL, awR = (ac[0], awL[0], awR[0]) if (
                     size == 1) else (ac, awL, awR)
 
-                path_matrix.ix[dependant[i], independant] = ac
-                path_matrix_low.ix[dependant[i], independant] = awL
-                path_matrix_high.ix[dependant[i], independant] = awR
+                path_matrix.ix[dependent[i], independent] = ac
+                path_matrix_low.ix[dependent[i], independent] = awL
+                path_matrix_high.ix[dependent[i], independent] = awR
 
                 # Matrix Fuzzy
 
@@ -674,34 +735,39 @@ class PyLSpm(object):
 
         r2 = r2.T
 
+        self.path_matrix = path_matrix
+        self.outer_weights = outer_weights
+        self.fscores = fscores
+
+        #################################
+        # PLSc
+        if disattenuate == 'true':
+            outer_loadings = self.PLSc()
+        ##################################
+
         # Path Effects
 
         indirect_effects = pd.DataFrame(0, index=latent, columns=latent)
 
         path_effects = [None] * self.lenlatent
-        path_effects[0] = path_matrix
+        path_effects[0] = self.path_matrix
 
         for i in range(1, self.lenlatent):
             path_effects[i] = pd.DataFrame.dot(
-                path_effects[i - 1], path_matrix)
+                path_effects[i - 1], self.path_matrix)
         for i in range(1, len(path_effects)):
             indirect_effects = indirect_effects + path_effects[i]
 
-        total_effects = indirect_effects + path_matrix
+        total_effects = indirect_effects + self.path_matrix
 
-        self.path_matrix = path_matrix
         self.path_matrix_high = path_matrix_high
         self.path_matrix_low = path_matrix_low
-
         self.total_effects = total_effects.T
         self.indirect_effects = indirect_effects
-
-        self.fscores = fscores
         self.outer_loadings = outer_loadings
         self.contador = contador
         self.convergiu = convergiu
         self.path_matrix_range = path_matrix_range
-        self.outer_weights = outer_weights
         self.r2 = r2
 
     def data(self):
@@ -819,25 +885,25 @@ class PyLSpm(object):
         unstandardizedPath = pd.DataFrame(
             0, index=self.latent, columns=self.latent)
 
-        dependant = np.unique(self.LVariables.ix[:, 'target'])
-        for i in range(len(dependant)):
-            independant = self.LVariables[self.LVariables.ix[
-                :, "target"] == dependant[i]]["source"]
-            dependant_ = unstandardizedScores.ix[:, dependant[i]]
-            independant_ = unstandardizedScores.ix[:, independant]
+        dependent = np.unique(self.LVariables.ix[:, 'target'])
+        for i in range(len(dependent)):
+            independent = self.LVariables[self.LVariables.ix[
+                :, "target"] == dependent[i]]["source"]
+            dependent_ = unstandardizedScores.ix[:, dependent[i]]
+            independent_ = unstandardizedScores.ix[:, independent]
 
-#            ac, awL, awR = otimiza(dependant_, independant_, len(
-#                independant_.columns), self.h, 'ols')
-            print(len(independant_))
-            print(len(independant_.T.values.flatten()))
-            print(np.ones(len(independant_)))
+#            ac, awL, awR = otimiza(dependent_, independent_, len(
+#                independent_.columns), self.h, 'ols')
+#            print(len(independent_))
+#            print(len(independent_.T.values.flatten()))
+#            print(np.ones(len(independent_)))
             A = np.vstack(
-                [independant_.T.values, np.ones(len(independant_))]).T
-            coef, resid = np.linalg.lstsq(A, dependant_)[:2]
-            print(coef)
+                [independent_.T.values, np.ones(len(independent_))]).T
+            coef, resid = np.linalg.lstsq(A, dependent_)[:2]
+#            print(coef)
 #            del coef[-1]
 
-            unstandardizedPath.ix[dependant[i], independant] = coef[:-1]
+            unstandardizedPath.ix[dependent[i], independent] = coef[:-1]
 
         print(unstandardizedPath)
 

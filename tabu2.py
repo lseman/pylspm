@@ -8,8 +8,6 @@ import random
 from pylspm import PyLSpm
 from boot import PyLSboot
 
-from multiprocessing import Pool, freeze_support
-
 
 def stochasticTwoOpt(perm):
     result = perm[:]  # make a copy
@@ -57,7 +55,7 @@ def generateCandidates(best, tabuList):
     return permutation
 
 
-def tabu(tabu_size, n_children, n_clusters, n_goal, iterations, data_,
+def tabu(tabu_size, n_children, n_clusters, iterations, data_,
          lvmodel, mvmodel, scheme, regression):
 
     node = []
@@ -91,7 +89,7 @@ def tabu(tabu_size, n_children, n_clusters, n_goal, iterations, data_,
                 del tabuList[0]
 
     print("\nFitness = %s" % best[1])
-    print(bestfit[0])
+    print(best[0])
 
     output = pd.DataFrame(best[0])
     output.columns = ['Split']
