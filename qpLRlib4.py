@@ -42,8 +42,8 @@ def otimiza(y, x, size, h, method='fuzzy', plotaIC='false'):
 
     yname = y.name
     xname = x.columns.values
-    print(['y: ' + yname])
-    print('x: ' + xname)
+#    print(['y: ' + yname])
+#    print('x: ' + xname)
 
     y = y.values
     x = x.values
@@ -71,8 +71,8 @@ def otimiza(y, x, size, h, method='fuzzy', plotaIC='false'):
                                            for j in range(size))) >= y[i])
 
     model.optimize()
-    print(awL)
-    print(awR)
+#    print(awL)
+#    print(awR)
 #    plota(x, y, ac, awL, awR, xname, yname, size)
 #    ic = IC(x, y, ac, awL, awR, size)
 

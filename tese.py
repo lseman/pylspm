@@ -1,8 +1,3 @@
-# PLS-PM tabu search clustering
-# Author: Laio Oriel Seman
-
-# BROWNLEE, J. Clever Algorithms. [s.l: s.n.].
-
 from multiprocessing import Pool, freeze_support
 
 import numpy as np
@@ -26,6 +21,7 @@ from gac import gac
 from pso import pso
 from tabu2 import tabu
 from permuta import permuta
+from plsr2 import plsr2, HOCcat
 
 if __name__ == '__main__':
     freeze_support()
@@ -43,31 +39,30 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    mode = 4
+    mode = 0
     nrboot = 100
     cores = 8
 
     diff = 'none'
     method = 'percentile'
-    data = 'dados_miss.csv'
+    data = 'dados_missForest.csv'
     lvmodel = 'lvnew.csv'
     mvmodel = 'mvnew.csv'
     scheme = 'path'
     regression = 'ols'
 
-    # Trata missing data (mean)
-
     def isNaN(num):
         return num != num
 
     data_ = pd.read_csv(data)
-    mean = pd.DataFrame.mean(data_)
+
+    # Mean replacement
+
+    """mean = pd.DataFrame.mean(data_)
     for j in range(len(data_.columns)):
         for i in range(len(data_)):
             if (isNaN(data_.ix[i, j])):
-                data_.ix[i, j] = mean[j]
-
-    # Go!
+                data_.ix[i, j] = mean[j]"""
 
 #    data_ = data_.drop('SEM', axis=1)
 
@@ -75,6 +70,8 @@ if __name__ == '__main__':
 #    segmento = 'SEM'
 #    data_ = (data_.loc[data_[segmento] == g1]).drop(segmento, axis=1)
 #    print(data_)
+
+    data_, mvmodel = HOCcat(data_, mvmodel)
 
     if (mode == 0):
 
@@ -94,6 +91,7 @@ if __name__ == '__main__':
             rebus(tese.residuals()[0], data_, tese.data,
                   lvmodel, mvmodel, scheme, regression)
 
+        print(tese.path_matrix)
 #        print(tese.path_matrix)
 #        print(tese.residuals()[3])
 
@@ -118,7 +116,7 @@ if __name__ == '__main__':
     # Permutation
     elif (mode == 4):
         permuta(nrboot, cores, data_, lvmodel,
-            mvmodel, scheme, regression, 0, 100, g1=0, g2=1)
+                mvmodel, scheme, regression, 0, 100, g1=0, g2=1)
 
     # GA
     elif (mode == 5):

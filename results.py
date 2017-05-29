@@ -2,9 +2,13 @@ class PyLSpmHTML(object):
 
     def __init__(self, plsobject):
         self.path_matrix = plsobject.path_matrix.T
-        self.path_matrix_low = plsobject.path_matrix_low
-        self.path_matrix_high = plsobject.path_matrix_high
-        self.path_matrix_range = plsobject.path_matrix_range
+        self.scheme = plsobject.scheme
+        self.regression = plsobject.regression
+
+        if self.regression == 'fuzzy':
+            self.path_matrix_low = plsobject.path_matrix_low
+            self.path_matrix_high = plsobject.path_matrix_high
+            self.path_matrix_range = plsobject.path_matrix_range
 
         self.corLVs = plsobject.corLVs()
         self.AVE = plsobject.AVE()
@@ -24,14 +28,11 @@ class PyLSpmHTML(object):
         self.indirect_effects = plsobject.indirect_effects
         self.empirical = plsobject.empirical()
         self.implied = plsobject.implied()
-        self.scheme = plsobject.scheme
-        self.regression = plsobject.regression
 
         self.srmr = plsobject.srmr()
         self.gof = plsobject.gof()
         self.frequency = plsobject.frequency()
-        self.mean = plsobject.dataInfo()[0]
-        self.sd = plsobject.dataInfo()[1]
+        self.mean, self.sd, self.skew, self.kurtosis, self.shapiro = plsobject.dataInfo()
 
         self.plsc = plsobject.disattenuate
 
@@ -168,7 +169,7 @@ class PyLSpmHTML(object):
 
         return print_matrix
 
-    def geraDataInfoTable(self, matrix, matrix2):
+    def geraDataInfoTable(self, matrix, matrix2, matrix3, matrix4, matrix5):
 
         print_matrix = """
         <div id="datainfo">
@@ -180,20 +181,27 @@ class PyLSpmHTML(object):
         linhas = matrix.index.values
         conteudo = matrix.values
         conteudo2 = matrix2.values
+        conteudo3 = matrix3
+        conteudo4 = matrix4
+        conteudo5 = matrix5
 
         print_matrix += "<th></th>"
         print_matrix += "<th>Mean</th>"
         print_matrix += "<th>Standard Deviation</th>"
+        print_matrix += "<th>Skewness</th>"
+        print_matrix += "<th>Kurtosis</th>"
+        print_matrix += "<th>Shapiro</th>"
 
         print_matrix += """</tr></thead><tbody>"""
 
         for i in range(len(linhas)):
             print_matrix += "<tr>"
             print_matrix += "<td>" + str(linhas[i]) + "</td>"
-            print_matrix += "<td>" + \
-                str(round(float(conteudo[i]), 3)) + "</td>"
-            print_matrix += "<td>" + \
-                str(round(float(conteudo2[i]), 3)) + "</td>"
+            print_matrix += "<td>" + str(round(float(conteudo[i]), 3)) + "</td>"
+            print_matrix += "<td>" + str(round(float(conteudo2[i]), 3)) + "</td>"
+            print_matrix += "<td>" + str(round(float(conteudo3[i]), 3)) + "</td>"
+            print_matrix += "<td>" + str(round(float(conteudo4[i]), 3)) + "</td>"
+            print_matrix += "<td>" + str(round(float(conteudo5[i]), 3)) + "</td>"
             print_matrix += "</tr>"
 
         print_matrix += """</tbody>
@@ -347,7 +355,7 @@ class PyLSpmHTML(object):
 
         reliability = self.geraReliabilityTable(self.alpha, self.cr, self.rhoA)
 
-        datainfo = self.geraDataInfoTable(self.mean, self.sd)
+        datainfo = self.geraDataInfoTable(self.mean, self.sd, self.skew, self.kurtosis, self.shapiro)
 
         body = """<body data-spy="scroll" data-target="#myScrollspy" data-offset="60">
         <nav class="navbar navbar-inverse navbar-fixed-top"><div class="container-fluid"><div class="navbar-header"><div class="navbar-brand">PyLS-PM</div></div></div></nav>

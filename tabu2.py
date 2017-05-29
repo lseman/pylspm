@@ -1,3 +1,8 @@
+# PLS-PM tabu search clustering
+# Author: Laio Oriel Seman
+
+# BROWNLEE, J. Clever Algorithms. [s.l: s.n.].
+
 from random import randint, uniform
 from copy import deepcopy
 import numpy as np

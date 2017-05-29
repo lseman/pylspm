@@ -15,6 +15,61 @@ from collections import Counter
 
 class PyLSpm(object):
 
+    def BTS(self):
+
+        n = self.data_.shape[0]
+        p = self.data_.shape[1]
+
+        chi2 = -(n - 1 - (2 * p + 5) / 6) * \
+            np.log(np.linalg.det(pd.DataFrame.corr(self.data_)))
+        df = p * (p - 1) / 2
+
+        pvalue = scipy.stats.distributions.chi2.sf(chi2, df)
+
+        return [chi2, pvalue]
+
+    def KMO(self):
+
+        cor_ = pd.DataFrame.corr(self.data_)
+        invCor = np.linalg.inv(cor_)
+        rows = cor_.shape[0]
+        cols = cor_.shape[1]
+        A = np.ones((rows, cols))
+
+        for i in range(rows):
+            for j in range(i, cols):
+                A[i, j] = - (invCor[i, j]) / \
+                    (np.sqrt(invCor[i, i] * invCor[j, j]))
+                A[j, i] = A[i, j]
+
+        num = np.sum(np.sum((cor_)**2)) - np.sum(np.sum(np.diag(cor_**2)))
+        den = num + (np.sum(np.sum(A**2)) - np.sum(np.sum(np.diag(A**2))))
+        kmo = num / den
+
+        return kmo
+
+    def PCA(self):
+        for i in range(self.lenlatent):
+            print(self.latent[i])
+            block = self.data_[self.Variables['measurement']
+                               [self.Variables['latent'] == self.latent[i]]]
+
+            cor_ = np.corrcoef(block.T)
+            eig_vals, eig_vecs = np.linalg.eig(cor_)
+            tot = sum(eig_vals)
+            var_exp = [(i / tot) * 100 for i in sorted(eig_vals, reverse=True)]
+            cum_var_exp = np.cumsum(var_exp)
+            loadings = (eig_vecs * np.sqrt(eig_vals))
+
+            print('Eigenvalues')
+            print(np.sort(eig_vals)[::-1])
+            print('Variance Explained')
+            print(var_exp)
+            print('Total Variance Explained')
+            print(cum_var_exp)
+            print('Loadings')
+            print(abs(loadings[:, 0]))
+
     def sampleSize(self):
         r = 0.3
         alpha = 0.05
@@ -40,10 +95,11 @@ class PyLSpm(object):
         return [powerArray, sizeArray]
 
     def normaliza(self, X):
+        correction = np.sqrt((len(X) - 1) / len(X))  # std factor corretion
         mean_ = np.mean(X, 0)
         scale_ = np.std(X, 0)
         X = X - mean_
-        X = X / scale_
+        X = X / (scale_ * correction)
         return X
 
     def gof(self):
@@ -177,7 +233,11 @@ class PyLSpm(object):
     def dataInfo(self):
         sd_ = np.std(self.data, 0)
         mean_ = np.mean(self.data, 0)
-        return [mean_, sd_]
+        skew = scipy.stats.skew(self.data)
+        kurtosis = scipy.stats.kurtosis(self.data)
+        w = [scipy.stats.shapiro(self.data.ix[:,i])[0] for i in range(len(self.data.columns))]
+
+        return [mean_, sd_, skew, kurtosis, w]
 
     def predict(self, method='redundancy'):
         exoVar = []
@@ -494,7 +554,11 @@ class PyLSpm(object):
             data = pd.read_csv(dados)
 
         LVariables = pd.read_csv(LVcsv)
-        Variables = pd.read_csv(Mcsv)
+
+        if type(Mcsv) is pd.core.frame.DataFrame:
+            Variables = Mcsv
+        else:
+            Variables = pd.read_csv(Mcsv)
 
         latent_ = LVariables.values.flatten('F')
         latent__ = np.unique(latent_, return_index=True)[1]
@@ -562,7 +626,22 @@ class PyLSpm(object):
             inner_paths[LVariables['source'][i]][LVariables['target'][i]] = 1
 
         path_matrix = inner_paths.copy()
-        self.inner_model = inner_paths.copy()
+
+        # new mode A (Kramer)
+        newModeA = len(data_) * \
+            np.linalg.norm(np.dot(outer_weights.T, outer_weights))
+
+        for i in range(self.lenlatent):
+            outer_ = (outer_weights[latent[i]][Variables['measurement'][Variables[
+                      'latent'] == latent[i]]]) / newModeA
+            myindex = Variables['measurement'][
+                Variables['latent'] == latent[i]]
+            myindex_ = latent[i]
+            outer_weights.ix[myindex.values, myindex_] = outer_
+
+        # Old
+        # fscores = pd.DataFrame.dot(data_, outer_weights)
+        # (np.std(fscores.ix[:, latent[i]]) * np.sqrt((len(data_) - 1) / len(data_)))
 
         # LOOP
         for iterations in range(0, self.maximo):
@@ -573,16 +652,16 @@ class PyLSpm(object):
             # Schemes
             if (scheme == 'path'):
                 for i in range(len(path_matrix)):
-                    follow = (path_matrix.iloc[i, :] == 1)
+                    follow = (path_matrix.ix[i, :] == 1)
                     if (sum(follow) > 0):
                         # i ~ follow
                         inner_paths.ix[inner_paths[follow].index, i] = np.linalg.lstsq(
-                            fscores.loc[:, follow], fscores.iloc[:, i])[0]
+                            fscores.ix[:, follow], fscores.ix[:, i])[0]
 
-                    predec = (path_matrix.iloc[:, i] == 1)
+                    predec = (path_matrix.ix[:, i] == 1)
                     if (sum(predec) > 0):
                         semi = fscores.ix[:, predec]
-                        a_ = list(fscores.iloc[:, i])
+                        a_ = list(fscores.ix[:, i])
 
                         cor = [sp.stats.pearsonr(a_, list(semi.ix[:, j].values.flatten()))[
                             0] for j in range(len(semi.columns))]
@@ -590,15 +669,15 @@ class PyLSpm(object):
 
             elif (scheme == 'fuzzy'):
                 for i in range(len(path_matrix)):
-                    follow = (path_matrix.iloc[i, :] == 1)
+                    follow = (path_matrix.ix[i, :] == 1)
                     if (sum(follow) > 0):
-                        ac, awL, awR = otimiza(fscores.iloc[:, i], fscores.loc[
-                                               :, follow], len(fscores.loc[:, follow].columns), 0)
+                        ac, awL, awR = otimiza(fscores.ix[:, i], fscores.ix[
+                                               :, follow], len(fscores.ix[:, follow].columns), 0)
                         inner_paths.ix[inner_paths[follow].index, i] = ac
 
-                    predec = (path_matrix.iloc[:, i] == 1)
+                    predec = (path_matrix.ix[:, i] == 1)
                     if (sum(predec) > 0):
-                        cor, p = sp.stats.pearsonr(list(fscores.iloc[:, i]), list(
+                        cor, p = sp.stats.pearsonr(list(fscores.ix[:, i]), list(
                             fscores.ix[:, predec].values.flatten()))
                         inner_paths.ix[inner_paths[predec].index, i] = cor
 
@@ -611,7 +690,6 @@ class PyLSpm(object):
                     pd.DataFrame.corr(fscores), (path_matrix + path_matrix.T))
 
             fscores = pd.DataFrame.dot(fscores, inner_paths)
-            fscores = self.normaliza(fscores)
             last_outer_weights = outer_weights.copy()
 
             # Outer Weights
@@ -621,49 +699,52 @@ class PyLSpm(object):
                 if(Variables['mode'][Variables['latent'] == latent[i]]).any() == "A":
                     a = data_[Variables['measurement'][
                         Variables['latent'] == latent[i]]]
-                    b = list(fscores.ix[:, latent[i]])
-                    cov_ = [np.cov(list(a.ix[:, j]), b)[0][1]
-                            for j in range(len(a.columns))]
+                    b = fscores.ix[:, latent[i]]
+
+                    # 1/N (Z dot X)
+                    res_ = (1 / len(data_)) * np.dot(b, a)
 
                     myindex = Variables['measurement'][
                         Variables['latent'] == latent[i]]
                     myindex_ = latent[i]
-                    outer_weights.ix[myindex.values, myindex_] = cov_
+                    outer_weights.ix[myindex.values,
+                                     myindex_] = res_
 
                 # Formativo / Modo B
                 elif(Variables['mode'][Variables['latent'] == latent[i]]).any() == "B":
 
                     a = data_[Variables['measurement'][
                         Variables['latent'] == latent[i]]]
-                    a_ = [list(a.ix[:, j]) for j in range(len(a.columns))]
-                    lin_ = np.corrcoef(a_)
-                    inv_ = (np.linalg.inv(lin_))
 
-                    b = list(fscores.ix[:, latent[i]])
-                    cor_ = [sp.stats.pearsonr(list(a.ix[:, j]), b)[0]
-                            for j in range(len(a.columns))]
+                    # (X'X)^-1 X' Y
+                    a_ = np.dot(a.T, a)
+                    inv_ = np.linalg.inv(a_)
+                    res_ = np.dot(np.dot(inv_, a.T), fscores.ix[:, latent[i]])
 
                     myindex = Variables['measurement'][
                         Variables['latent'] == latent[i]]
                     myindex_ = latent[i]
                     outer_weights.ix[myindex.values,
-                                     myindex_] = np.dot(inv_, cor_)
+                                     myindex_] = res_
 
-            fscores = pd.DataFrame.dot(data_, outer_weights)
+            diff_ = ((abs(last_outer_weights) -
+                      abs(outer_weights))**2).values.sum()
 
-            for i in range(self.lenlatent):
-                outer_weights[latent[i]][Variables['measurement'][Variables['latent'] == latent[i]]] = outer_weights[latent[
-                    i]][Variables['measurement'][Variables['latent'] == latent[i]]] / np.std(list(fscores.ix[:, latent[i]]))
-
-            diff_ = abs(outer_weights - last_outer_weights).values.sum()
             if (diff_ < (10**(-(self.stopCriterion)))):
                 convergiu = 1
                 break
-        # END LOOP
+            # END LOOP
 
         # Bootstraping trick
         if(np.isnan(outer_weights).any().any()):
             return None
+
+        # Standardize Outer Weights (w / || scores ||)
+        divide_ = np.diag(1 / (np.std(np.dot(data_, outer_weights), 0)
+                               * np.sqrt((len(data_) - 1) / len(data_))))
+        outer_weights = np.dot(outer_weights, divide_)
+        outer_weights = pd.DataFrame(
+            outer_weights, index=manifests, columns=latent)
 
         fscores = pd.DataFrame.dot(data_, outer_weights)
 
@@ -674,9 +755,9 @@ class PyLSpm(object):
         for i in range(self.lenlatent):
             a = data_[Variables['measurement'][
                 Variables['latent'] == latent[i]]]
-            b = list(fscores.ix[:, latent[i]])
+            b = fscores.ix[:, latent[i]]
 
-            cor_ = [sp.stats.pearsonr(list(a.ix[:, j]), b)[0]
+            cor_ = [sp.stats.pearsonr(a.ix[:, j], b)[0]
                     for j in range(len(a.columns))]
 
             myindex = Variables['measurement'][
@@ -684,11 +765,12 @@ class PyLSpm(object):
             myindex_ = latent[i]
             outer_loadings.ix[myindex.values, myindex_] = cor_
 
-        path_matrix_low = path_matrix.copy()
-        path_matrix_high = path_matrix.copy()
-        path_matrix_range = path_matrix.copy()
-
         # Paths
+
+        if (regression == 'fuzzy'):
+            path_matrix_low = path_matrix.copy()
+            path_matrix_high = path_matrix.copy()
+            path_matrix_range = path_matrix.copy()
 
         r2 = pd.DataFrame(0, index=np.arange(1), columns=latent)
         dependent = np.unique(LVariables.ix[:, 'target'])
@@ -760,63 +842,18 @@ class PyLSpm(object):
 
         total_effects = indirect_effects + self.path_matrix
 
-        self.path_matrix_high = path_matrix_high
-        self.path_matrix_low = path_matrix_low
+        if (regression == 'fuzzy'):
+            self.path_matrix_high = path_matrix_high
+            self.path_matrix_low = path_matrix_low
+            self.path_matrix_range = path_matrix_range
+
         self.total_effects = total_effects.T
         self.indirect_effects = indirect_effects
         self.outer_loadings = outer_loadings
         self.contador = contador
         self.convergiu = convergiu
-        self.path_matrix_range = path_matrix_range
+
         self.r2 = r2
-
-    def data(self):
-        return self.data
-
-    def Variables(self):
-        return self.Variables
-
-    def latent(self):
-        return self.latent
-
-    def scheme(self):
-        return self.scheme
-
-    def regression(self):
-        return self.reg
-
-    def r2(self):
-        return self.r2
-
-    def outer_loadings(self):
-        return self.outer_loadings
-
-    def outer_weights(self):
-        return self.outer_weights
-
-    def fscores(self):
-        return self.fscores
-
-    def path_matrix(self):
-        return self.path_matrix
-
-    def path_matrix_high(self):
-        return self.path_matrix_high
-
-    def path_matrix_low(self):
-        return self.path_matrix_low
-
-    def path_matrix_range(self):
-        return self.path_matrix_range
-
-    def contador(self):
-        return self.contador
-
-    def convergiu(self):
-        return self.convergiu
-
-    def trick(self):
-        return self.trick
 
     def impa(self):
 
@@ -894,14 +931,9 @@ class PyLSpm(object):
 
 #            ac, awL, awR = otimiza(dependent_, independent_, len(
 #                independent_.columns), self.h, 'ols')
-#            print(len(independent_))
-#            print(len(independent_.T.values.flatten()))
-#            print(np.ones(len(independent_)))
             A = np.vstack(
                 [independent_.T.values, np.ones(len(independent_))]).T
             coef, resid = np.linalg.lstsq(A, dependent_)[:2]
-#            print(coef)
-#            del coef[-1]
 
             unstandardizedPath.ix[dependent[i], independent] = coef[:-1]
 
