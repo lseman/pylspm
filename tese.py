@@ -94,12 +94,22 @@ if __name__ == '__main__':
                   lvmodel, mvmodel, scheme, regression)
 
         print(tese.path_matrix)
-        tese.PCA()
+#        tese.PCA()
 #        print(tese.path_matrix)
 #        print(tese.residuals()[3])
 
+        impa = tese.impa()
+
+        # Manifest Effects
+
+        print(impa[0])
+
+        print(impa[1])
+#            plt.savefig(names[i], bbox_inches='tight')
+
         imprime = PyLSpmHTML(tese)
         imprime.generate()
+
 
     # Monte Carlo with Cholesky
     elif (mode == 10):

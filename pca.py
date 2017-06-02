@@ -16,7 +16,6 @@ def PA(samples, variables):
         eig_vals.append(np.sort(np.linalg.eig(cor_)[0])[::-1])
 
     mean_ = (np.round(np.mean(eig_vals, axis=0), 4))
-
     return mean_
 
 

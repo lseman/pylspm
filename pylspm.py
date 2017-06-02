@@ -54,7 +54,6 @@ class PyLSpm(object):
             print(self.latent[i])
             block = self.data_[self.Variables['measurement']
                                [self.Variables['latent'] == self.latent[i]]]
-
             PCAdo(block)
 
     def sampleSize(self):
@@ -222,7 +221,8 @@ class PyLSpm(object):
         mean_ = np.mean(self.data, 0)
         skew = scipy.stats.skew(self.data)
         kurtosis = scipy.stats.kurtosis(self.data)
-        w = [scipy.stats.shapiro(self.data.ix[:,i])[0] for i in range(len(self.data.columns))]
+        w = [scipy.stats.shapiro(self.data.ix[:, i])[0]
+             for i in range(len(self.data.columns))]
 
         return [mean_, sd_, skew, kurtosis, w]
 
@@ -535,11 +535,13 @@ class PyLSpm(object):
         contador = 0
         convergiu = 0
 
-        data = dados if type(dados) is pd.core.frame.DataFrame else pd.read_csv(dados)
+        data = dados if type(
+            dados) is pd.core.frame.DataFrame else pd.read_csv(dados)
 
         LVariables = pd.read_csv(LVcsv)
 
-        Variables = Mcsv if type(Mcsv) is pd.core.frame.DataFrame else pd.read_csv(Mcsv)
+        Variables = Mcsv if type(
+            Mcsv) is pd.core.frame.DataFrame else pd.read_csv(Mcsv)
 
         latent_ = LVariables.values.flatten('F')
         latent__ = np.unique(latent_, return_index=True)[1]
@@ -866,8 +868,13 @@ class PyLSpm(object):
             minimo_ = pd.DataFrame.min(minimo)
             maximo_ = pd.DataFrame.max(maximo)
 
+            print(minimo_)
+            print(maximo_)
+
             rescaledScores[self.latent[
                 i]] = 100 * (unstandardizedScores[self.latent[i]] - minimo_) / (maximo_ - minimo_)
+
+            print(rescaledScores)
 
         # Manifests Indirect Effects
 
@@ -936,6 +943,8 @@ class PyLSpm(object):
                 path_effects[i]
 
         unstandardizedPathTotal = unstandardizedIndirectEffects + unstandardizedPath
+
+        print(unstandardizedPathTotal)
 
         # Unstandardized Manifests Indirect Effects
 
