@@ -11,6 +11,7 @@ import scipy.stats
 from qpLRlib4 import otimiza, plotaIC
 import scipy.linalg
 from collections import Counter
+from pca import *
 
 
 class PyLSpm(object):
@@ -54,21 +55,7 @@ class PyLSpm(object):
             block = self.data_[self.Variables['measurement']
                                [self.Variables['latent'] == self.latent[i]]]
 
-            cor_ = np.corrcoef(block.T)
-            eig_vals, eig_vecs = np.linalg.eig(cor_)
-            tot = sum(eig_vals)
-            var_exp = [(i / tot) * 100 for i in sorted(eig_vals, reverse=True)]
-            cum_var_exp = np.cumsum(var_exp)
-            loadings = (eig_vecs * np.sqrt(eig_vals))
-
-            print('Eigenvalues')
-            print(np.sort(eig_vals)[::-1])
-            print('Variance Explained')
-            print(var_exp)
-            print('Total Variance Explained')
-            print(cum_var_exp)
-            print('Loadings')
-            print(abs(loadings[:, 0]))
+            PCAdo(block)
 
     def sampleSize(self):
         r = 0.3

@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    mode = 10
+    mode = 0
     nrboot = 100
     cores = 8
     nrepic = 100
@@ -94,6 +94,7 @@ if __name__ == '__main__':
                   lvmodel, mvmodel, scheme, regression)
 
         print(tese.path_matrix)
+        tese.PCA()
 #        print(tese.path_matrix)
 #        print(tese.residuals()[3])
 
