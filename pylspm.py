@@ -548,17 +548,11 @@ class PyLSpm(object):
         contador = 0
         convergiu = 0
 
-        if type(dados) is pd.core.frame.DataFrame:
-            data = dados
-        else:
-            data = pd.read_csv(dados)
+        data = dados if type(dados) is pd.core.frame.DataFrame else pd.read_csv(dados)
 
         LVariables = pd.read_csv(LVcsv)
 
-        if type(Mcsv) is pd.core.frame.DataFrame:
-            Variables = Mcsv
-        else:
-            Variables = pd.read_csv(Mcsv)
+        Variables = Mcsv if type(Mcsv) is pd.core.frame.DataFrame else pd.read_csv(Mcsv)
 
         latent_ = LVariables.values.flatten('F')
         latent__ = np.unique(latent_, return_index=True)[1]

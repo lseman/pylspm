@@ -197,11 +197,16 @@ class PyLSpmHTML(object):
         for i in range(len(linhas)):
             print_matrix += "<tr>"
             print_matrix += "<td>" + str(linhas[i]) + "</td>"
-            print_matrix += "<td>" + str(round(float(conteudo[i]), 3)) + "</td>"
-            print_matrix += "<td>" + str(round(float(conteudo2[i]), 3)) + "</td>"
-            print_matrix += "<td>" + str(round(float(conteudo3[i]), 3)) + "</td>"
-            print_matrix += "<td>" + str(round(float(conteudo4[i]), 3)) + "</td>"
-            print_matrix += "<td>" + str(round(float(conteudo5[i]), 3)) + "</td>"
+            print_matrix += "<td>" + \
+                str(round(float(conteudo[i]), 3)) + "</td>"
+            print_matrix += "<td>" + \
+                str(round(float(conteudo2[i]), 3)) + "</td>"
+            print_matrix += "<td>" + \
+                str(round(float(conteudo3[i]), 3)) + "</td>"
+            print_matrix += "<td>" + \
+                str(round(float(conteudo4[i]), 3)) + "</td>"
+            print_matrix += "<td>" + \
+                str(round(float(conteudo5[i]), 3)) + "</td>"
             print_matrix += "</tr>"
 
         print_matrix += """</tbody>
@@ -355,7 +360,8 @@ class PyLSpmHTML(object):
 
         reliability = self.geraReliabilityTable(self.alpha, self.cr, self.rhoA)
 
-        datainfo = self.geraDataInfoTable(self.mean, self.sd, self.skew, self.kurtosis, self.shapiro)
+        datainfo = self.geraDataInfoTable(
+            self.mean, self.sd, self.skew, self.kurtosis, self.shapiro)
 
         body = """<body data-spy="scroll" data-target="#myScrollspy" data-offset="60">
         <nav class="navbar navbar-inverse navbar-fixed-top"><div class="container-fluid"><div class="navbar-header"><div class="navbar-brand">PyLS-PM</div></div></div></nav>

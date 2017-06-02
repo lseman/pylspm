@@ -22,6 +22,7 @@ from pso import pso
 from tabu2 import tabu
 from permuta import permuta
 from plsr2 import plsr2, HOCcat
+from monteCholesky import monteCholesky
 
 if __name__ == '__main__':
     freeze_support()
@@ -39,9 +40,10 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    mode = 0
+    mode = 10
     nrboot = 100
     cores = 8
+    nrepic = 100
 
     diff = 'none'
     method = 'percentile'
@@ -71,7 +73,7 @@ if __name__ == '__main__':
 #    data_ = (data_.loc[data_[segmento] == g1]).drop(segmento, axis=1)
 #    print(data_)
 
-    data_, mvmodel = HOCcat(data_, mvmodel)
+#    data_, mvmodel = HOCcat(data_, mvmodel, seed=9002)
 
     if (mode == 0):
 
@@ -98,10 +100,15 @@ if __name__ == '__main__':
         imprime = PyLSpmHTML(tese)
         imprime.generate()
 
+    # Monte Carlo with Cholesky
+    elif (mode == 10):
+        monteCholesky(nrepic, nrboot, cores, data_, lvmodel,
+                  mvmodel, scheme, regression, 0, 100, method)
+
     # Bootstrap
     elif (mode == 1):
         bootstrap(nrboot, cores, data_, lvmodel,
-                  mvmodel, scheme, regression, 0, 100)
+                  mvmodel, scheme, regression, 0, 100, method)
 
     # Blindfolding
     elif (mode == 2):

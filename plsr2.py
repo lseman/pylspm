@@ -16,9 +16,9 @@ def normaliza(X):
 # T as scores
 
 
-def plsr2(X, Y, nc=None, cross='TRUE'):
+def plsr2(X, Y, nc=None, cross='TRUE', seed=None):
 
-    random.seed(9002)
+    random.seed(seed)
 
     if (nc == None) and (cross == 'FALSE'):
         nc = 2
@@ -133,8 +133,6 @@ def plsr2(X, Y, nc=None, cross='TRUE'):
         P = p if P is None else np.hstack((P, p))
         Q = q if Q is None else np.hstack((Q, q))
 
-        X_old = np.copy(X)
-        Y_old = np.copy(Y)
         X = X - t * p.T
         Y = Y - t * c.T
 
@@ -142,13 +140,13 @@ def plsr2(X, Y, nc=None, cross='TRUE'):
             break
         h += 1
 
-    B = W * (P.T * W).I * C.T
+#    B = W * (P.T * W).I * C.T
 
     # Scores
     return [T, U]
 
 
-def HOCcat(data_, mvmodel):
+def HOCcat(data_, mvmodel, seed):
     response = data_.ix[:, 10:25]
     preditors = []
     preditors.append(data_.ix[:, 10:15])
@@ -157,7 +155,7 @@ def HOCcat(data_, mvmodel):
 
     plsr_ = None
     for i in range(3):
-        res_ = plsr2(preditors[i], response)[0]
+        res_ = plsr2(preditors[i], response, seed=seed)[0]
         plsr_ = res_ if plsr_ is None else np.hstack((plsr_, res_))
 
     plsr_ = pd.DataFrame(plsr_)

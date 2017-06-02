@@ -42,6 +42,8 @@ def bootstrap(nrboot, cores, data_, lvmodel,
                 tstat, len(current_) - 1)),5)
             print(pvalue)
 
+            return pvalue
+
     elif (method == 'bca'):
 
         default = PyLSpm(data_, lvmodel, mvmodel, scheme,
