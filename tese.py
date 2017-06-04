@@ -53,6 +53,7 @@ if __name__ == '__main__':
     mvmodel = 'mvnew.csv'
     scheme = 'path'
     regression = 'ols'
+    algorithm = 'wold'
 
     def isNaN(num):
         return num != num
@@ -79,7 +80,7 @@ if __name__ == '__main__':
     if (mode == 0):
 
         tese = PyLSpm(data_, lvmodel, mvmodel, scheme,
-                      regression, 0, 100, HOC='false', disattenuate='false')
+                      regression, 0, 100, HOC='false', disattenuate='false', method=algorithm)
 
         if (diff == 'sample'):
             tese.sampleSize()
@@ -94,7 +95,7 @@ if __name__ == '__main__':
             rebus(tese.residuals()[0], data_, tese.data,
                   lvmodel, mvmodel, scheme, regression)
 
-        elif (diff =='plots'):
+        elif (diff == 'plots'):
 
             tese.PCA()
             SEM = data_['SEM']
@@ -112,7 +113,6 @@ if __name__ == '__main__':
         imprime.generate()
 
         print(tese.path_matrix)
-
 
     # Monte Carlo with Cholesky
     elif (mode == 10):

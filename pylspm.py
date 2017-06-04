@@ -587,7 +587,8 @@ class PyLSpm(object):
         # End PLSc
         ##################################################
 
-    def __init__(self, dados, LVcsv, Mcsv, scheme='path', regression='ols', h=0, maximo=300, stopCrit=7, HOC='false', disattenuate='false'):
+    def __init__(self, dados, LVcsv, Mcsv, scheme='path', regression='ols', h=0, maximo=300, stopCrit=7, HOC='false', disattenuate='false',
+                 method='lohmoller'):
         self.data = dados
         self.LVcsv = LVcsv
         self.Mcsv = Mcsv
@@ -676,69 +677,72 @@ class PyLSpm(object):
 
         path_matrix = inner_paths.copy()
 
-        # new mode A (Kramer)
-        '''newModeA = len(data_) * \
-            np.linalg.norm(np.dot(outer_weights.T, outer_weights))
-
-        for i in range(self.lenlatent):
-            outer_ = (outer_weights[latent[i]][Variables['measurement'][Variables[
-                      'latent'] == latent[i]]]) / newModeA
-            myindex = Variables['measurement'][
-                Variables['latent'] == latent[i]]
-            myindex_ = latent[i]
-            outer_weights.ix[myindex.values, myindex_] = outer_'''
-
-        # Old
-        # fscores = pd.DataFrame.dot(data_, outer_weights)
-        # (np.std(fscores.ix[:, latent[i]]) * np.sqrt((len(data_) - 1) / len(data_)))
+        if method == 'wold':
+            fscores = pd.DataFrame.dot(data_, outer_weights)
+            intera = self.lenlatent
+            intera_ = 1
 
         # LOOP
         for iterations in range(0, self.maximo):
             contador = contador + 1
-            fscores = pd.DataFrame.dot(data_, outer_weights)
-#            fscores = self.normaliza(fscores)
 
-            # Schemes
-            if (scheme == 'path'):
-                for i in range(len(path_matrix)):
-                    follow = (path_matrix.ix[i, :] == 1)
-                    if (sum(follow) > 0):
-                        # i ~ follow
-                        inner_paths.ix[inner_paths[follow].index, i] = np.linalg.lstsq(
-                            fscores.ix[:, follow], fscores.ix[:, i])[0]
+            if method == 'lohmoller':
+                fscores = pd.DataFrame.dot(data_, outer_weights)
+                intera = 1
+                intera_ = self.lenlatent
+#               fscores = self.normaliza(fscores) # Old Mode A
 
-                    predec = (path_matrix.ix[:, i] == 1)
-                    if (sum(predec) > 0):
-                        semi = fscores.ix[:, predec]
-                        a_ = list(fscores.ix[:, i])
+            for q in range(intera):
 
-                        cor = [sp.stats.pearsonr(a_, list(semi.ix[:, j].values.flatten()))[
-                            0] for j in range(len(semi.columns))]
-                        inner_paths.ix[inner_paths[predec].index, i] = cor
+                # Schemes
+                if (scheme == 'path'):
+                    for h in range(intera_):
 
-            elif (scheme == 'fuzzy'):
-                for i in range(len(path_matrix)):
-                    follow = (path_matrix.ix[i, :] == 1)
-                    if (sum(follow) > 0):
-                        ac, awL, awR = otimiza(fscores.ix[:, i], fscores.ix[
-                                               :, follow], len(fscores.ix[:, follow].columns), 0)
-                        inner_paths.ix[inner_paths[follow].index, i] = ac
+                        i = h if method == 'lohmoller' else q
 
-                    predec = (path_matrix.ix[:, i] == 1)
-                    if (sum(predec) > 0):
-                        cor, p = sp.stats.pearsonr(list(fscores.ix[:, i]), list(
-                            fscores.ix[:, predec].values.flatten()))
-                        inner_paths.ix[inner_paths[predec].index, i] = cor
+                        follow = (path_matrix.ix[i, :] == 1)
+                        if (sum(follow) > 0):
+                            # i ~ follow
+                            inner_paths.ix[inner_paths[follow].index, i] = np.linalg.lstsq(
+                                fscores.ix[:, follow], fscores.ix[:, i])[0]
 
-            elif (scheme == 'centroid'):
-                inner_paths = np.sign(pd.DataFrame.multiply(
-                    pd.DataFrame.corr(fscores), (path_matrix + path_matrix.T)))
+                        predec = (path_matrix.ix[:, i] == 1)
+                        if (sum(predec) > 0):
+                            semi = fscores.ix[:, predec]
+                            a_ = list(fscores.ix[:, i])
 
-            elif (scheme == 'factor'):
-                inner_paths = pd.DataFrame.multiply(
-                    pd.DataFrame.corr(fscores), (path_matrix + path_matrix.T))
+                            cor = [sp.stats.pearsonr(a_, list(semi.ix[:, j].values.flatten()))[
+                                0] for j in range(len(semi.columns))]
+                            inner_paths.ix[inner_paths[predec].index, i] = cor
 
-            fscores = pd.DataFrame.dot(fscores, inner_paths)
+                elif (scheme == 'fuzzy'):
+                    for i in range(len(path_matrix)):
+                        follow = (path_matrix.ix[i, :] == 1)
+                        if (sum(follow) > 0):
+                            ac, awL, awR = otimiza(fscores.ix[:, i], fscores.ix[
+                                                   :, follow], len(fscores.ix[:, follow].columns), 0)
+                            inner_paths.ix[inner_paths[follow].index, i] = ac
+
+                        predec = (path_matrix.ix[:, i] == 1)
+                        if (sum(predec) > 0):
+                            cor, p = sp.stats.pearsonr(list(fscores.ix[:, i]), list(
+                                fscores.ix[:, predec].values.flatten()))
+                            inner_paths.ix[inner_paths[predec].index, i] = cor
+
+                elif (scheme == 'centroid'):
+                    inner_paths = np.sign(pd.DataFrame.multiply(
+                        pd.DataFrame.corr(fscores), (path_matrix + path_matrix.T)))
+
+                elif (scheme == 'factor'):
+                    inner_paths = pd.DataFrame.multiply(
+                        pd.DataFrame.corr(fscores), (path_matrix + path_matrix.T))
+
+                if method == 'wold':
+                    fscores[self.latent[q]] = pd.DataFrame.dot(
+                        fscores, inner_paths)
+                elif method == 'lohmoller':
+                    fscores = pd.DataFrame.dot(fscores, inner_paths)
+
             last_outer_weights = outer_weights.copy()
 
             # Outer Weights
@@ -757,7 +761,7 @@ class PyLSpm(object):
                         Variables['latent'] == latent[i]]
                     myindex_ = latent[i]
                     outer_weights.ix[myindex.values,
-                                     myindex_] = res_  # / np.linalg.norm(res_)
+                                     myindex_] = res_ / np.linalg.norm(res_)  # New Mode A
 
                 # Formativo / Modo B
                 elif(Variables['mode'][Variables['latent'] == latent[i]]).any() == "B":
@@ -768,17 +772,24 @@ class PyLSpm(object):
                     # (X'X)^-1 X'Y
                     a_ = np.dot(a.T, a)
                     inv_ = np.linalg.inv(a_)
-                    res_ = np.dot(np.dot(inv_, a.T), fscores.ix[:, latent[i]])
+                    res_ = np.dot(np.dot(inv_, a.T),
+                                  fscores.ix[:, latent[i]])
 
                     myindex = Variables['measurement'][
                         Variables['latent'] == latent[i]]
                     myindex_ = latent[i]
                     outer_weights.ix[myindex.values,
-                                     myindex_] = res_
+                                     myindex_] = res_ / np.norm(outer_weights, 0)
 
-                # New Mode A
-                outer_weights = outer_weights / \
-                    (np.std(outer_weights, 0) * len(fscores)**2)
+            if method == 'wold':
+                fscores = pd.DataFrame.dot(fscores, inner_paths)
+
+            # New Mode A
+#            outer_weights = outer_weights / \
+#                (np.std(outer_weights, 0)) #* len(fscores)**2)
+
+#                outer_weights = outer_weights / np.std(outer_weights, 0)
+#                print(outer_weights)
 
             diff_ = ((abs(last_outer_weights) -
                       abs(outer_weights))**2).values.sum()
