@@ -37,6 +37,7 @@ if __name__ == '__main__':
             'size': 10}
 
     matplotlib.rc('font', **font)
+    matplotlib.style.use('ggplot')
 
     # Parâmetros
 
@@ -46,7 +47,7 @@ if __name__ == '__main__':
     nrepic = 100
 
     diff = 'none'
-    method = 'percentile'
+    method = 'bca'
     data = 'dados_missForest.csv'
     lvmodel = 'lvnew.csv'
     mvmodel = 'mvnew.csv'
@@ -73,7 +74,7 @@ if __name__ == '__main__':
 #    data_ = (data_.loc[data_[segmento] == g1]).drop(segmento, axis=1)
 #    print(data_)
 
-#    data_, mvmodel = HOCcat(data_, mvmodel, seed=9002)
+    data_, mvmodel = HOCcat(data_, mvmodel, seed=9002)
 
     if (mode == 0):
 
@@ -93,28 +94,30 @@ if __name__ == '__main__':
             rebus(tese.residuals()[0], data_, tese.data,
                   lvmodel, mvmodel, scheme, regression)
 
-        print(tese.path_matrix)
-#        tese.PCA()
-#        print(tese.path_matrix)
-#        print(tese.residuals()[3])
+        elif (diff =='plots'):
 
-        impa = tese.impa()
+            tese.PCA()
+            SEM = data_['SEM']
+            tese.frequencyPlot(data_, SEM)
+            tese.impa()
+            tese.scatterMatrix()
 
-        # Manifest Effects
-
-        print(impa[0])
-
-        print(impa[1])
-#            plt.savefig(names[i], bbox_inches='tight')
+            data_ = data_.drop('SEM', axis=1)
+            data_.boxplot(grid=False)
+            plt.savefig('imgs/boxplot', bbox_inches='tight')
+            plt.clf()
+            plt.cla()
 
         imprime = PyLSpmHTML(tese)
         imprime.generate()
+
+        print(tese.path_matrix)
 
 
     # Monte Carlo with Cholesky
     elif (mode == 10):
         monteCholesky(nrepic, nrboot, cores, data_, lvmodel,
-                  mvmodel, scheme, regression, 0, 100, method)
+                      mvmodel, scheme, regression, 0, 100, method)
 
     # Bootstrap
     elif (mode == 1):

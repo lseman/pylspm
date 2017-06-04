@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 
 
 def PA(samples, variables):
-    datasets = 500
+    datasets = 5000
     eig_vals = []
 
     for i in range(datasets):
@@ -15,11 +15,13 @@ def PA(samples, variables):
         cor_ = np.corrcoef(data)
         eig_vals.append(np.sort(np.linalg.eig(cor_)[0])[::-1])
 
+
+    quantile = (np.round(np.percentile(eig_vals, 95.0, axis=0), 4))
     mean_ = (np.round(np.mean(eig_vals, axis=0), 4))
-    return mean_
+    return quantile
 
 
-def PCAdo(block):
+def PCAdo(block, name):
     cor_ = np.corrcoef(block.T)
     eig_vals, eig_vecs = np.linalg.eig(cor_)
     tot = sum(eig_vals)
@@ -37,14 +39,18 @@ def PCAdo(block):
     print('Loadings')
     print(abs(loadings[:, 0]))
 
-    meanPA = PA(block.shape[0], block.shape[1])
+    PAcorrect = PA(block.shape[0], block.shape[1])
 
     print('Parallel Analisys')
-    pa = (eig_vals - (meanPA - 1))
+    pa = (eig_vals - (PAcorrect - 1))
     print(pa)
 
-    plt.plot(range(len(pa)), pa, '-o')
-    plt.plot(np.ones(len(pa)), '--')
+    plt.plot(range(1,len(pa)+1), pa, '-o')
+    plt.grid(True)
     plt.xlabel('Fatores')
-    plt.ylabel('Autovalores')
-    plt.show()
+    plt.ylabel('Componentes')
+
+    plt.savefig('imgs/PCA' + name, bbox_inches='tight')
+    plt.clf()
+    plt.cla()
+#    plt.show()

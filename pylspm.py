@@ -12,6 +12,7 @@ from qpLRlib4 import otimiza, plotaIC
 import scipy.linalg
 from collections import Counter
 from pca import *
+from pandas.plotting import scatter_matrix
 
 
 class PyLSpm(object):
@@ -54,7 +55,17 @@ class PyLSpm(object):
             print(self.latent[i])
             block = self.data_[self.Variables['measurement']
                                [self.Variables['latent'] == self.latent[i]]]
-            PCAdo(block)
+            PCAdo(block, self.latent[i])
+
+    def scatterMatrix(self):
+        for i in range(1, self.lenlatent):
+            block = self.data[self.Variables['measurement']
+                              [self.Variables['latent'] == self.latent[i]]]
+            scatter_matrix(block, diagonal='kde')
+
+            plt.savefig('imgs/scatter' + self.latent[i], bbox_inches='tight')
+            plt.clf()
+            plt.cla()
 
     def sampleSize(self):
         r = 0.3
@@ -181,20 +192,27 @@ class PyLSpm(object):
         empirical = self.data_
         return pd.DataFrame.corr(empirical)
 
-    def frequency(self):
-        frequencia = pd.DataFrame(0, index=range(1, 6), columns=self.manifests)
+    def frequency(self, data=None, manifests=None):
 
-        for i in range(len(self.manifests)):
-            frequencia[self.manifests[i]] = self.data[
-                self.manifests[i]].value_counts()
+        if data is None:
+            data = self.data
 
-        frequencia = frequencia / len(self.data) * 100
+        if manifests is None:
+            manifests = self.manifests
+
+        frequencia = pd.DataFrame(0, index=range(1, 6), columns=manifests)
+
+        for i in range(len(manifests)):
+            frequencia[manifests[i]] = data[
+                manifests[i]].value_counts()
+
+        frequencia = frequencia / len(data) * 100
         frequencia = frequencia.reindex_axis(
             sorted(frequencia.columns), axis=1)
         frequencia = frequencia.fillna(0).T
         frequencia = frequencia[(frequencia.T != 0).any()]
 
-        maximo = pd.DataFrame.max(pd.DataFrame.max(self.data, axis=0))
+        maximo = pd.DataFrame.max(pd.DataFrame.max(data, axis=0))
 
         if int(maximo) & 1:
             neg = np.sum(frequencia.ix[:, 1: ((maximo - 1) / 2)], axis=1)
@@ -215,6 +233,54 @@ class PyLSpm(object):
             pos, index=frequencia.index)
 
         return frequencia
+
+    def frequencyPlot(self, data_, SEM=None):
+
+        segmento = 'SEM'
+        SEMmax = pd.DataFrame.max(SEM)
+
+        ok = None
+
+        for i in range(1, self.lenlatent):
+            block = data_[self.Variables['measurement']
+                          [self.Variables['latent'] == self.latent[i]]]
+            block = pd.concat([block, SEM], axis=1)
+
+            for j in range(SEMmax + 1):
+                dataSEM = (block.loc[data_[segmento] == j]
+                           ).drop(segmento, axis=1)
+                block_val = dataSEM.columns.values
+                dataSEM = self.frequency(dataSEM, block_val)['Pos.']
+                dataSEM = dataSEM.rename(j + 1)
+                ok = dataSEM if ok is None else pd.concat(
+                    [ok, dataSEM], axis=1)
+
+        for i in range(1, self.lenlatent):
+            block = data_[self.Variables['measurement']
+                          [self.Variables['latent'] == self.latent[i]]]
+
+            block_val = block.columns.values
+            plotando = ok.ix[block_val].dropna(axis=1)
+            plotando.plot.bar()
+            plt.legend(loc='upper center',
+                           bbox_to_anchor=(0.5, -.08), ncol=6)
+            plt.savefig('imgs/frequency' + self.latent[i], bbox_inches='tight')
+            plt.clf()
+            plt.cla()
+#            plt.show()
+
+#                block.plot.bar()
+#                plt.show()
+
+        '''for i in range(1, self.lenlatent):
+            block = self.data[self.Variables['measurement']
+                              [self.Variables['latent'] == self.latent[i]]]
+
+            block_val = block.columns.values
+            block = self.frequency(block, block_val)
+
+            block.plot.bar()
+            plt.show()'''
 
     def dataInfo(self):
         sd_ = np.std(self.data, 0)
@@ -611,7 +677,7 @@ class PyLSpm(object):
         path_matrix = inner_paths.copy()
 
         # new mode A (Kramer)
-        newModeA = len(data_) * \
+        '''newModeA = len(data_) * \
             np.linalg.norm(np.dot(outer_weights.T, outer_weights))
 
         for i in range(self.lenlatent):
@@ -620,7 +686,7 @@ class PyLSpm(object):
             myindex = Variables['measurement'][
                 Variables['latent'] == latent[i]]
             myindex_ = latent[i]
-            outer_weights.ix[myindex.values, myindex_] = outer_
+            outer_weights.ix[myindex.values, myindex_] = outer_'''
 
         # Old
         # fscores = pd.DataFrame.dot(data_, outer_weights)
@@ -630,7 +696,7 @@ class PyLSpm(object):
         for iterations in range(0, self.maximo):
             contador = contador + 1
             fscores = pd.DataFrame.dot(data_, outer_weights)
-            fscores = self.normaliza(fscores)
+#            fscores = self.normaliza(fscores)
 
             # Schemes
             if (scheme == 'path'):
@@ -691,7 +757,7 @@ class PyLSpm(object):
                         Variables['latent'] == latent[i]]
                     myindex_ = latent[i]
                     outer_weights.ix[myindex.values,
-                                     myindex_] = res_
+                                     myindex_] = res_  # / np.linalg.norm(res_)
 
                 # Formativo / Modo B
                 elif(Variables['mode'][Variables['latent'] == latent[i]]).any() == "B":
@@ -699,7 +765,7 @@ class PyLSpm(object):
                     a = data_[Variables['measurement'][
                         Variables['latent'] == latent[i]]]
 
-                    # (X'X)^-1 X' Y
+                    # (X'X)^-1 X'Y
                     a_ = np.dot(a.T, a)
                     inv_ = np.linalg.inv(a_)
                     res_ = np.dot(np.dot(inv_, a.T), fscores.ix[:, latent[i]])
@@ -710,6 +776,10 @@ class PyLSpm(object):
                     outer_weights.ix[myindex.values,
                                      myindex_] = res_
 
+                # New Mode A
+                outer_weights = outer_weights / \
+                    (np.std(outer_weights, 0) * len(fscores)**2)
+
             diff_ = ((abs(last_outer_weights) -
                       abs(outer_weights))**2).values.sum()
 
@@ -717,6 +787,8 @@ class PyLSpm(object):
                 convergiu = 1
                 break
             # END LOOP
+
+        print(contador)
 
         # Bootstraping trick
         if(np.isnan(outer_weights).any().any()):
@@ -868,13 +940,8 @@ class PyLSpm(object):
             minimo_ = pd.DataFrame.min(minimo)
             maximo_ = pd.DataFrame.max(maximo)
 
-            print(minimo_)
-            print(maximo_)
-
             rescaledScores[self.latent[
                 i]] = 100 * (unstandardizedScores[self.latent[i]] - minimo_) / (maximo_ - minimo_)
-
-            print(rescaledScores)
 
         # Manifests Indirect Effects
 
@@ -925,8 +992,6 @@ class PyLSpm(object):
 
             unstandardizedPath.ix[dependent[i], independent] = coef[:-1]
 
-        print(unstandardizedPath)
-
         # Unstandardized Total Effects
 
         path_effects = [None] * self.lenlatent
@@ -944,8 +1009,6 @@ class PyLSpm(object):
 
         unstandardizedPathTotal = unstandardizedIndirectEffects + unstandardizedPath
 
-        print(unstandardizedPathTotal)
-
         # Unstandardized Manifests Indirect Effects
 
         unstandardizedManifestsIndEffects = pd.DataFrame(
@@ -959,5 +1022,41 @@ class PyLSpm(object):
                 unstandardizedEffect_, unstandardizedPath.T)
             unstandardizedManifestsIndEffects = unstandardizedManifestsIndEffects + \
                 unstandardizedEffect_
+
+        # IMPAplot
+
+        for i in range(self.lenlatent):
+            for j in range(len(performanceManifests)):
+                # if unstandardizedManifestsIndEffects.ix[j,i] != 0:
+                plt.plot(unstandardizedManifestsIndEffects.ix[
+                         j, i], performanceManifests[j], 'o', label=self.manifests[j])
+            plt.legend(loc='upper center', bbox_to_anchor=(0.5, -.12), ncol=6)
+            plt.xlim(0)
+            plt.ylim(0, 100)
+            plt.xlabel('Efeito Total')
+            plt.ylabel(self.latent[i])
+            plt.savefig('imgs/impaManifests' +
+                        self.latent[i], bbox_inches='tight')
+            plt.clf()
+            plt.cla()
+#            plt.show()
+
+        for i in range(self.lenlatent):
+            if (np.sum(unstandardizedPathTotal.ix[i, :] != 0) > 1):
+                for j in range(self.lenlatent):
+                    if unstandardizedPathTotal.ix[i, j] != 0:
+                        plt.plot(unstandardizedPathTotal.ix[
+                            i, j], performanceScoresLV.ix[j], 'o', label=self.latent[j])
+                plt.xlabel('Efeito Total')
+                plt.ylabel(self.latent[i])
+                plt.legend(loc='upper center',
+                           bbox_to_anchor=(0.5, -.12), ncol=6)
+                plt.xlim(0, 1)
+                plt.ylim(0, 100)
+                plt.savefig('imgs/impaScores' +
+                            self.latent[i], bbox_inches='tight')
+                plt.clf()
+                plt.cla()
+#                plt.show()
 
         return [performanceScoresLV, performanceManifests, unstandardizedPathTotal, unstandardizedManifestsIndEffects]
