@@ -20,7 +20,9 @@ def plota(x, y, ac, awL, awR, xname, yname, size):
     plt.legend()
     plt.xlabel(xname[0], fontsize=12)
     plt.ylabel(yname, fontsize=12)
-    plt.show()
+    plt.savefig('imgs/fuzzy' + yname, bbox_inches='tight')
+    plt.clf()
+    plt.cla()
 
 
 def otimiza(y, x, size, h, method='fuzzy', plotaIC='false'):
@@ -73,7 +75,7 @@ def otimiza(y, x, size, h, method='fuzzy', plotaIC='false'):
     model.optimize()
 #    print(awL)
 #    print(awR)
-#    plota(x, y, ac, awL, awR, xname, yname, size)
+    plota(x, y, ac, awL, awR, xname, yname, size)
 #    ic = IC(x, y, ac, awL, awR, size)
 
     if plotaIC == 'false':
@@ -116,26 +118,43 @@ def plotaIC(y, x, size):
     h = 0
     IClist = []
     hlist = []
-    aclist = []
+    awRlist = []
+    awLlist = []
 
-    for i in range(0, 90):
-        h += 0.01
+    nomeia = y.name
+
+    for i in range(0, 19):
+        h += 0.05
+        print(h)
         hlist.append(h)
         model, ac, awL, awR = otimiza(y, x, size, h, plotaIC='true')
-        aclist.append(awR[1].x)
+        awRlist.append(awR[1].x)
+        awLlist.append(awL[1].x)
         IClist.append(IC(x.values, y.values, ac, awL, awR, size))
 
     x = hlist
     y = IClist
-    z = aclist
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
     ax.set_xlabel('índice h')
     ax.set_ylabel('IC')
-    ax.set_zlabel('Coeficiente de Caminho')
+    ax.set_zlabel('awR')
     ax.set_axis_bgcolor('white')
-    ax.plot(x, y, z)
-#    fig.savefig('temp.png', transparent=True)
-    plt.show()
+    ax.plot(x, y, awRlist)
+    plt.savefig('imgs/IC_awR_' + nomeia, bbox_inches='tight')
+    plt.clf()
+    plt.cla()
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.set_xlabel('índice h')
+    ax.set_ylabel('IC')
+    ax.set_zlabel('awL')
+    ax.set_axis_bgcolor('white')
+    ax.plot(x, y, awLlist)
+    plt.savefig('imgs/IC_awL_' + nomeia, bbox_inches='tight')
+    plt.clf()
+    plt.cla()

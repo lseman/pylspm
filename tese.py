@@ -52,7 +52,7 @@ if __name__ == '__main__':
     lvmodel = 'lvnew.csv'
     mvmodel = 'mvnew.csv'
     scheme = 'path'
-    regression = 'ols'
+    regression = 'fuzzy'
     algorithm = 'wold'
 
     def isNaN(num):
@@ -75,7 +75,7 @@ if __name__ == '__main__':
 #    data_ = (data_.loc[data_[segmento] == g1]).drop(segmento, axis=1)
 #    print(data_)
 
-    data_, mvmodel = HOCcat(data_, mvmodel, seed=9002)
+#    data_, mvmodel = HOCcat(data_, mvmodel, seed=9002)
 
     if (mode == 0):
 
@@ -85,7 +85,7 @@ if __name__ == '__main__':
         if (diff == 'sample'):
             tese.sampleSize()
 
-            plt.plot(tese.sampleSize()[0], tese.sampleSize()[1], 'o-')
+            plt.plot(tese.sampleSize()[0], tese.sampleSize()[1], '-')
             plt.xlabel('Potência')
             plt.ylabel('Tamanho da Amostra')
             plt.grid(True)
@@ -95,7 +95,7 @@ if __name__ == '__main__':
             rebus(tese.residuals()[0], data_, tese.data,
                   lvmodel, mvmodel, scheme, regression)
 
-        elif (diff == 'plots'):
+        elif (diff == 'plot'):
 
             tese.PCA()
             SEM = data_['SEM']
@@ -141,7 +141,7 @@ if __name__ == '__main__':
 
     # GA
     elif (mode == 5):
-        n_individuals = 5
+        n_individuals = 10
         n_clusters = 3
         p_crossover = 0.85
 #        p_mutation = 1-((0.3)**(1.0/(1.0*len(data_))))

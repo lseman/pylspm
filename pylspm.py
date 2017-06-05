@@ -587,8 +587,8 @@ class PyLSpm(object):
         # End PLSc
         ##################################################
 
-    def __init__(self, dados, LVcsv, Mcsv, scheme='path', regression='ols', h=0, maximo=300, stopCrit=7, HOC='false', disattenuate='false',
-                 method='lohmoller'):
+    def __init__(self, dados, LVcsv, Mcsv, scheme='path', regression='ols', h=0, maximo=300,
+        stopCrit=7, HOC='false', disattenuate='false', method='lohmoller'):
         self.data = dados
         self.LVcsv = LVcsv
         self.Mcsv = Mcsv
@@ -716,7 +716,10 @@ class PyLSpm(object):
                             inner_paths.ix[inner_paths[predec].index, i] = cor
 
                 elif (scheme == 'fuzzy'):
-                    for i in range(len(path_matrix)):
+                    for h in range(len(path_matrix)):
+
+                        i = h if method == 'lohmoller' else q
+
                         follow = (path_matrix.ix[i, :] == 1)
                         if (sum(follow) > 0):
                             ac, awL, awR = otimiza(fscores.ix[:, i], fscores.ix[
@@ -725,8 +728,11 @@ class PyLSpm(object):
 
                         predec = (path_matrix.ix[:, i] == 1)
                         if (sum(predec) > 0):
-                            cor, p = sp.stats.pearsonr(list(fscores.ix[:, i]), list(
-                                fscores.ix[:, predec].values.flatten()))
+                            semi = fscores.ix[:, predec]
+                            a_ = list(fscores.ix[:, i])
+
+                            cor = [sp.stats.pearsonr(a_, list(semi.ix[:, j].values.flatten()))[
+                                0] for j in range(len(semi.columns))]
                             inner_paths.ix[inner_paths[predec].index, i] = cor
 
                 elif (scheme == 'centroid'):
@@ -779,20 +785,12 @@ class PyLSpm(object):
                         Variables['latent'] == latent[i]]
                     myindex_ = latent[i]
                     outer_weights.ix[myindex.values,
-                                     myindex_] = res_ / np.norm(outer_weights, 0)
+                                     myindex_] = res_ / (np.std(np.dot(data_.ix[:, myindex], res_)))
 
             if method == 'wold':
                 fscores = pd.DataFrame.dot(fscores, inner_paths)
 
-            # New Mode A
-#            outer_weights = outer_weights / \
-#                (np.std(outer_weights, 0)) #* len(fscores)**2)
-
-#                outer_weights = outer_weights / np.std(outer_weights, 0)
-#                print(outer_weights)
-
-            diff_ = ((abs(last_outer_weights) -
-                      abs(outer_weights))**2).values.sum()
+            diff_ = np.max(np.max((abs(last_outer_weights) - abs(outer_weights))**2))
 
             if (diff_ < (10**(-(self.stopCriterion)))):
                 convergiu = 1
@@ -865,7 +863,7 @@ class PyLSpm(object):
                 size = len(independent_.columns)
                 ac, awL, awR = otimiza(dependent_, independent_, size, self.h)
 
-#                plotaIC(dependent_, independent_, size)
+                # plotaIC(dependent_, independent_, size)
 
                 ac, awL, awR = (ac[0], awL[0], awR[0]) if (
                     size == 1) else (ac, awL, awR)
