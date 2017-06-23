@@ -70,7 +70,7 @@ def permuta(nrboot, cores, data_, lvmodel,
     estimado = trataGroups(estimData)
 
     # Step 2 n Step 3
-    print('c Mean')
+    '''print('c Mean')
     print(estimado[0][0])
     print('c 5%')
     print(estimado[2][0])
@@ -95,4 +95,13 @@ def permuta(nrboot, cores, data_, lvmodel,
     print('p-value')
     pval = np.sum([np.array(c) < np.array(estimado[3])],
                   axis=1) * (1 / (nrboot + 1))
-    print(pval[0][0])
+    print(pval[0][0])'''
+
+    print('test Compositional Invariance')
+    print(np.round(c, 4)<estimado[2][0])
+
+#    print('Equality of Composite Mean Values and Variance')
+#    print(estimado[0][1]>estimado[4][1])
+#    print(estimado[0][1]<estimado[5][1])
+#    print(estimado[0][2]>estimado[4][2])
+#    print(estimado[0][2]<estimado[5][2])

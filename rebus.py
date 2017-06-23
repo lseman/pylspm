@@ -25,7 +25,7 @@ def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
 
     Z = linkage(residuals, method='ward')
     plt.figure(figsize=(15, 8))
-    plt.title('Dendograma de Agrupamento Hierárquico')
+#    plt.title('Dendograma de Agrupamento Hierárquico')
     plt.xlabel('Amostra')
     plt.ylabel('Distância')
     dendrogram(
@@ -34,7 +34,7 @@ def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
         leaf_font_size=8,
     )
     plt.show()
-    max_d = 17
+    max_d = 16
     clusters = fcluster(Z, max_d, criterion='distance')
     print(clusters)
 

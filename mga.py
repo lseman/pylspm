@@ -82,11 +82,11 @@ def mga(nrboot, cores, data_, lvmodel,
                     pval.ix[i, j] = scipy.stats.t.sf(
                         tStat.ix[i, j], df.ix[i, j])
 
-    print('t-stat')
-    print(tStat)
+#    print('t-stat')
+#    print(tStat)
     print('p-value')
     print(pval)
 
-    print('Paths')
-    print(estimado1[0])
-    print(estimado2[0])
+#    print('Paths')
+#    print(estimado1[0])
+#    print(estimado2[0])

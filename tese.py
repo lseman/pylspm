@@ -5,6 +5,7 @@ from numpy import inf
 import pandas as pd
 import scipy.stats
 from scipy.stats import norm
+import itertools
 
 import matplotlib
 from matplotlib import pyplot as plt
@@ -27,6 +28,8 @@ from monteCholesky import monteCholesky
 if __name__ == '__main__':
     freeze_support()
 
+    pd.set_option('display.expand_frame_repr', False)
+
     def print_full(x):
         pd.set_option('display.max_columns', len(x))
         print(x)
@@ -41,18 +44,18 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    mode = 0
-    nrboot = 100
+    mode = 5
+    nrboot = 500
     cores = 8
     nrepic = 100
 
-    diff = 'none'
+    diff = 'rebus'
     method = 'bca'
     data = 'dados_missForest.csv'
     lvmodel = 'lvnew.csv'
     mvmodel = 'mvnew.csv'
     scheme = 'path'
-    regression = 'fuzzy'
+    regression = 'ols'
     algorithm = 'wold'
 
     def isNaN(num):
@@ -80,7 +83,7 @@ if __name__ == '__main__':
     if (mode == 0):
 
         tese = PyLSpm(data_, lvmodel, mvmodel, scheme,
-                      regression, 0, 100, HOC='false', disattenuate='false', method=algorithm)
+                      regression, 0, 100, HOC='true', disattenuate='false', method=algorithm)
 
         if (diff == 'sample'):
             tese.sampleSize()
@@ -131,18 +134,30 @@ if __name__ == '__main__':
 
     # Multigroup Analysis
     elif (mode == 3):
-        mga(nrboot, cores, data_, lvmodel,
-            mvmodel, scheme, regression, 0, 100, g1=0, g2=1)
+#        mga(nrboot, cores, data_, lvmodel,
+#                mvmodel, scheme, regression, 0, 100, g1=0, g2=3)
+
+        comb = list(itertools.combinations(range(6), 2))
+        for k,j in comb:
+            print("Groups " + str(k+1) + '-' + str(j+1))
+            mga(nrboot, cores, data_, lvmodel,
+                mvmodel, scheme, regression, 0, 100, g1=k, g2=j)
 
     # Permutation
     elif (mode == 4):
-        permuta(nrboot, cores, data_, lvmodel,
-                mvmodel, scheme, regression, 0, 100, g1=0, g2=1)
+#        permuta(nrboot, cores, data_, lvmodel,
+#                mvmodel, scheme, regression, 0, 100, g1=3, g2=4)
+
+        comb = list(itertools.combinations(range(6), 2))
+        for k,j in comb:
+            print("Groups " + str(k+1) + '-' + str(j+1))
+            permuta(nrboot, cores, data_, lvmodel,
+                    mvmodel, scheme, regression, 0, 100, g1=k, g2=j)
 
     # GA
     elif (mode == 5):
         n_individuals = 10
-        n_clusters = 3
+        n_clusters = 4
         p_crossover = 0.85
 #        p_mutation = 1-((0.3)**(1.0/(1.0*len(data_))))
 #        print(p_mutation)

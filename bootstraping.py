@@ -100,3 +100,7 @@ def bootstrap(nrboot, cores, data_, lvmodel,
             print('CI HIGH')
             print(avals[1])
             print(high_conf)
+            print('t-value')
+            tstat = np.nan_to_num(np.mean(current_, axis=0) /
+                                  np.std(current_, axis=0, ddof=1))
+            print(tstat)

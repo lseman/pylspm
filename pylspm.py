@@ -17,22 +17,28 @@ from pandas.plotting import scatter_matrix
 
 class PyLSpm(object):
 
-    def BTS(self):
+    def BTS(self, data=None):
 
-        n = self.data_.shape[0]
-        p = self.data_.shape[1]
+        if data is None:
+            data = self.data_
+
+        n = data.shape[0]
+        p = data.shape[1]
 
         chi2 = -(n - 1 - (2 * p + 5) / 6) * \
-            np.log(np.linalg.det(pd.DataFrame.corr(self.data_)))
+            np.log(np.linalg.det(pd.DataFrame.corr(data)))
         df = p * (p - 1) / 2
 
         pvalue = scipy.stats.distributions.chi2.sf(chi2, df)
 
         return [chi2, pvalue]
 
-    def KMO(self):
+    def KMO(self, data=None):
 
-        cor_ = pd.DataFrame.corr(self.data_)
+        if data is None:
+            data = self.data_
+
+        cor_ = pd.DataFrame.corr(data)
         invCor = np.linalg.inv(cor_)
         rows = cor_.shape[0]
         cols = cor_.shape[1]
@@ -438,6 +444,14 @@ class PyLSpm(object):
         # AVE
         return self.comunalidades().apply(lambda column: column.sum() / (column != 0).sum())
 
+    def fornell(self):
+        cor_ = pd.DataFrame.corr(self.fscores)**2
+        AVE = self.comunalidades().apply(lambda column: column.sum() / (column != 0).sum())
+        for i in range(len(cor_)):
+            cor_.ix[i,i] = AVE[i]
+
+        print(cor_)
+
     def rhoA(self):
         # rhoA
         rhoA = pd.DataFrame(0, index=np.arange(1), columns=self.latent)
@@ -600,7 +614,7 @@ class PyLSpm(object):
         self.disattenuate = disattenuate
 
         contador = 0
-        convergiu = 0
+        self.convergiu = 0
 
         data = dados if type(
             dados) is pd.core.frame.DataFrame else pd.read_csv(dados)
@@ -708,6 +722,7 @@ class PyLSpm(object):
 
                         predec = (path_matrix.ix[:, i] == 1)
                         if (sum(predec) > 0):
+                            
                             semi = fscores.ix[:, predec]
                             a_ = list(fscores.ix[:, i])
 
@@ -743,6 +758,10 @@ class PyLSpm(object):
                     inner_paths = pd.DataFrame.multiply(
                         pd.DataFrame.corr(fscores), (path_matrix + path_matrix.T))
 
+                elif (scheme == 'horst'):
+                    inner_paths = inner_paths
+                    print(inner_paths)
+
                 if method == 'wold':
                     fscores[self.latent[q]] = pd.DataFrame.dot(
                         fscores, inner_paths)
@@ -767,7 +786,7 @@ class PyLSpm(object):
                         Variables['latent'] == latent[i]]
                     myindex_ = latent[i]
                     outer_weights.ix[myindex.values,
-                                     myindex_] = res_ / np.linalg.norm(res_)  # New Mode A
+                                     myindex_] = res_ / np.std(res_) # New Mode A
 
                 # Formativo / Modo B
                 elif(Variables['mode'][Variables['latent'] == latent[i]]).any() == "B":
@@ -793,11 +812,11 @@ class PyLSpm(object):
             diff_ = np.max(np.max((abs(last_outer_weights) - abs(outer_weights))**2))
 
             if (diff_ < (10**(-(self.stopCriterion)))):
-                convergiu = 1
+                self.convergiu = 1
                 break
             # END LOOP
 
-        print(contador)
+        # print(contador)
 
         # Bootstraping trick
         if(np.isnan(outer_weights).any().any()):
@@ -915,7 +934,6 @@ class PyLSpm(object):
         self.indirect_effects = indirect_effects
         self.outer_loadings = outer_loadings
         self.contador = contador
-        self.convergiu = convergiu
 
         self.r2 = r2
 

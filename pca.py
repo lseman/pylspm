@@ -45,6 +45,9 @@ def PCAdo(block, name):
     pa = (eig_vals - (PAcorrect - 1))
     print(pa)
 
+    print('Correlation Matrix')
+    print(pd.DataFrame.corr(block))
+
     plt.plot(range(1,len(pa)+1), pa, '-o')
     plt.grid(True)
     plt.xlabel('Fatores')

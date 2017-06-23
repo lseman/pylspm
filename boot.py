@@ -16,10 +16,13 @@ class PyLSboot(object):
         amostra = self.data.sample(
             len(self.data), replace=True, random_state=(np.random.RandomState()))
         amostra.index = range(len(self.data))
-        bootstraping = PyLSpm(amostra, self.LVcsv, self.Mcsv, self.scheme,
-                              self.reg, self.h, self.maximo, self.stopCriterion)
-        if (bootstraping.convergiu == 1):
-            return [bootstraping.path_matrix.values]
+        try:
+            bootstraping = PyLSpm(amostra, self.LVcsv, self.Mcsv, self.scheme,
+                                  self.reg, self.h, self.maximo, self.stopCriterion)
+            if (bootstraping.convergiu == 1):
+                return [bootstraping.path_matrix.values]
+        except:
+            return None
 
     def do_work_jk(self, item):
         amostra = self.data.ix[self.indices[item]].reset_index(drop=True)
@@ -110,23 +113,19 @@ class PyLSboot(object):
         f2 = []
         f3 = []
 
-        for i in range(2):
-            dataSplited = (dataSplit.loc[dataSplit['Split']
-                                         == i]).drop('Split', axis=1)
-            dataSplited.index = range(len(dataSplited))
+        try:
+            for i in range(2):
+                dataSplited = (dataSplit.loc[dataSplit['Split']
+                                             == i]).drop('Split', axis=1)
+                dataSplited.index = range(len(dataSplited))
 
-            try:
-                results.append(PyLSpm(dataSplited, self.LVcsv, self.Mcsv, self.scheme,
-                                      self.reg, 0, 50, HOC='false'))
+                results.append(PyLSpm(dataSplited, self.LVcsv, self.Mcsv,
+                                      self.scheme, self.reg, 0, 50, HOC='false'))
                 outer_weights = results[i].outer_weights
                 f1.append(outer_weights)
 
-            except:
-                print('error')
-
-        try:
-            singleResult = PyLSpm(self.dataPermuta, self.LVcsv, self.Mcsv, self.scheme,
-                                  self.reg, 0, 50, HOC='false')
+            singleResult = PyLSpm(self.dataPermuta, self.LVcsv,
+                                  self.Mcsv, self.scheme, self.reg, 0, 50, HOC='false')
             fscores = singleResult.fscores
 
             for i in range(2):
@@ -134,23 +133,23 @@ class PyLSboot(object):
                 f2.append(np.mean(f2_))
                 f3.append(np.var(f2_))
 
+            score1 = pd.DataFrame.dot(results[0].normaliza(dataSplited), f1[0])
+            score2 = pd.DataFrame.dot(results[0].normaliza(dataSplited), f1[1])
+
+            c = []
+            for i in range(len(score1.columns)):
+                c_ = np.corrcoef(score1.ix[:, i], score2.ix[:, i])
+                c.append(c_[0][1])
+
+            mean_diff = f2[0] - f2[1]
+
+            log_diff = np.log(f3[0]) - np.log(f3[1])
+
+    #        print(log_diff.values)
+            return c, mean_diff, log_diff
+
         except:
-            print('error singleResult')
-
-        score1 = pd.DataFrame.dot(results[0].normaliza(dataSplited), f1[0])
-        score2 = pd.DataFrame.dot(results[0].normaliza(dataSplited), f1[1])
-
-        c = []
-        for i in range(len(score1.columns)):
-            c_ = np.corrcoef(score1.ix[:, i], score2.ix[:, i])
-            c.append(c_[0][1])
-
-        mean_diff = f2[0] - f2[1]
-
-        log_diff = np.log(f3[0]) - np.log(f3[1])
-
-        print(log_diff.values)
-        return c, mean_diff, log_diff
+            return None
 
     def __init__(self, br, cores, dados, LVcsv, Mcsv, scheme='path', reg='ols', h=0, maximo=300, stopCrit=7, nclusters=2, population=None, g1=None, g2=None, segmento=None):
 
@@ -192,6 +191,7 @@ class PyLSboot(object):
 
         self.dataPermuta = (self.data.loc[(self.data[self.segmento] == self.g1) | (
             self.data[self.segmento] == self.g2)]).drop(self.segmento, axis=1)
+        self.dataPermuta.index = range(len(self.dataPermuta))
 
         self.leng1 = len(self.data.loc[(self.data[self.segmento] == self.g1)])
         self.leng2 = len(self.data.loc[(self.data[self.segmento] == self.g2)])
