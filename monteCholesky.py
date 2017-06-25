@@ -12,7 +12,7 @@ from bootstraping import bootstrap
 
 
 def monteCholesky(numRepic, nrboot, cores, data_, lvmodel,
-                  mvmodel, scheme, regression, h='0', maxit='100', method='percentile'):
+                  mvmodel, scheme, regression, h='0', maxit='100'):
 
     cov = pd.DataFrame.cov(data_)
     chol = np.linalg.cholesky(cov)
@@ -31,7 +31,7 @@ def monteCholesky(numRepic, nrboot, cores, data_, lvmodel,
         data_.index = range(len(data_))
 
         pval.append(bootstrap(nrboot, cores, data_, lvmodel,
-                              mvmodel, scheme, regression, 0, 100, method))
+                              mvmodel, scheme, regression, 0, 100, method='percentile'))
 
     # Power
     pval = np.array(pval)

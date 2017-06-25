@@ -24,7 +24,7 @@ from itertools import combinations
 def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
 
     Z = linkage(residuals, method='ward')
-    plt.figure(figsize=(15, 8))
+#    plt.figure(figsize=(10, 8))
 #    plt.title('Dendograma de Agrupamento Hierárquico')
     plt.xlabel('Amostra')
     plt.ylabel('Distância')
@@ -34,7 +34,7 @@ def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
         leaf_font_size=8,
     )
     plt.show()
-    max_d = 16
+    max_d = 17.5
     clusters = fcluster(Z, max_d, criterion='distance')
     print(clusters)
 
@@ -53,8 +53,9 @@ def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
             data_ = (dataSplit.loc[dataSplit['Split']
                                    == i + 1]).drop('Split', axis=1)
             data_.index = range(len(data_))
-            rebus.append(PyLSpm(data_, lvmodel, mvmodel, scheme,
-                                regression, 0, 100, HOC='true'))
+            estima = PyLSpm(data_, lvmodel, mvmodel, scheme,
+                                regression, 0, 100, HOC='true')
+            rebus.append(estima)
 
         CM = pd.DataFrame(0, index=np.arange(len(data)), columns=np.arange(nk))
 
@@ -151,7 +152,7 @@ def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
         f1.append(resid)
         print(resid)
 
-    print('final')
+    print('Final Cost')
     cost = (np.sum(f1))
     print(1 / cost)
 

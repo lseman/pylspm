@@ -24,6 +24,7 @@ from tabu2 import tabu
 from permuta import permuta
 from plsr2 import plsr2, HOCcat
 from monteCholesky import monteCholesky
+from adequacy import *
 
 if __name__ == '__main__':
     freeze_support()
@@ -44,13 +45,13 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    mode = 5
+    mode = 0
     nrboot = 500
     cores = 8
-    nrepic = 100
+    nrepic = 500
 
-    diff = 'rebus'
-    method = 'bca'
+    diff = 'none'
+    method = 'percentile'
     data = 'dados_missForest.csv'
     lvmodel = 'lvnew.csv'
     mvmodel = 'mvnew.csv'
@@ -83,7 +84,7 @@ if __name__ == '__main__':
     if (mode == 0):
 
         tese = PyLSpm(data_, lvmodel, mvmodel, scheme,
-                      regression, 0, 100, HOC='true', disattenuate='false', method=algorithm)
+                      regression, 0, 100, HOC='false', disattenuate='false', method=algorithm)
 
         if (diff == 'sample'):
             tese.sampleSize()
@@ -115,12 +116,14 @@ if __name__ == '__main__':
         imprime = PyLSpmHTML(tese)
         imprime.generate()
 
+        tese.impa()
+
         print(tese.path_matrix)
 
     # Monte Carlo with Cholesky
     elif (mode == 10):
         monteCholesky(nrepic, nrboot, cores, data_, lvmodel,
-                      mvmodel, scheme, regression, 0, 100, method)
+                      mvmodel, scheme, regression, 0, 100)
 
     # Bootstrap
     elif (mode == 1):
@@ -161,7 +164,7 @@ if __name__ == '__main__':
         p_crossover = 0.85
 #        p_mutation = 1-((0.3)**(1.0/(1.0*len(data_))))
 #        print(p_mutation)
-        p_mutation = 0.01
+        p_mutation = 0.03
         iterations = 100
 
         gac(n_individuals, n_clusters,

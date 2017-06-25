@@ -13,48 +13,12 @@ import scipy.linalg
 from collections import Counter
 from pca import *
 from pandas.plotting import scatter_matrix
+from adequacy import *
+import matplotlib.colors as colors
+import matplotlib.cm as mplcm
 
 
 class PyLSpm(object):
-
-    def BTS(self, data=None):
-
-        if data is None:
-            data = self.data_
-
-        n = data.shape[0]
-        p = data.shape[1]
-
-        chi2 = -(n - 1 - (2 * p + 5) / 6) * \
-            np.log(np.linalg.det(pd.DataFrame.corr(data)))
-        df = p * (p - 1) / 2
-
-        pvalue = scipy.stats.distributions.chi2.sf(chi2, df)
-
-        return [chi2, pvalue]
-
-    def KMO(self, data=None):
-
-        if data is None:
-            data = self.data_
-
-        cor_ = pd.DataFrame.corr(data)
-        invCor = np.linalg.inv(cor_)
-        rows = cor_.shape[0]
-        cols = cor_.shape[1]
-        A = np.ones((rows, cols))
-
-        for i in range(rows):
-            for j in range(i, cols):
-                A[i, j] = - (invCor[i, j]) / \
-                    (np.sqrt(invCor[i, i] * invCor[j, j]))
-                A[j, i] = A[i, j]
-
-        num = np.sum(np.sum((cor_)**2)) - np.sum(np.sum(np.diag(cor_**2)))
-        den = num + (np.sum(np.sum(A**2)) - np.sum(np.sum(np.diag(A**2))))
-        kmo = num / den
-
-        return kmo
 
     def PCA(self):
         for i in range(self.lenlatent):
@@ -62,6 +26,10 @@ class PyLSpm(object):
             block = self.data_[self.Variables['measurement']
                                [self.Variables['latent'] == self.latent[i]]]
             PCAdo(block, self.latent[i])
+            print('KMO')
+            print(KMO(block))
+            print('BTS')
+            print(BTS(block))
 
     def scatterMatrix(self):
         for i in range(1, self.lenlatent):
@@ -820,6 +788,7 @@ class PyLSpm(object):
 
         # Bootstraping trick
         if(np.isnan(outer_weights).any().any()):
+            self.convergiu = 0
             return None
 
         # Standardize Outer Weights (w / || scores ||)
@@ -1053,15 +1022,19 @@ class PyLSpm(object):
         # IMPAplot
 
         for i in range(self.lenlatent):
+            ncolors = len(unstandardizedManifestsIndEffects)
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            ax.set_prop_cycle(plt.cycler('color', plt.cm.tab20c(np.linspace(0, 1, ncolors))))
             for j in range(len(performanceManifests)):
                 # if unstandardizedManifestsIndEffects.ix[j,i] != 0:
-                plt.plot(unstandardizedManifestsIndEffects.ix[
+                ax.plot(unstandardizedManifestsIndEffects.ix[
                          j, i], performanceManifests[j], 'o', label=self.manifests[j])
-            plt.legend(loc='upper center', bbox_to_anchor=(0.5, -.12), ncol=6)
+            ax.legend(loc='upper center', bbox_to_anchor=(0.5, -.12), ncol=6)
             plt.xlim(0)
             plt.ylim(0, 100)
-            plt.xlabel('Efeito Total')
-            plt.ylabel(self.latent[i])
+            plt.xlabel('Importância')
+            plt.ylabel('Performance')
             plt.savefig('imgs/impaManifests' +
                         self.latent[i], bbox_inches='tight')
             plt.clf()
@@ -1074,8 +1047,8 @@ class PyLSpm(object):
                     if unstandardizedPathTotal.ix[i, j] != 0:
                         plt.plot(unstandardizedPathTotal.ix[
                             i, j], performanceScoresLV.ix[j], 'o', label=self.latent[j])
-                plt.xlabel('Efeito Total')
-                plt.ylabel(self.latent[i])
+                plt.xlabel('Importância')
+                plt.ylabel('Performance')
                 plt.legend(loc='upper center',
                            bbox_to_anchor=(0.5, -.12), ncol=6)
                 plt.xlim(0, 1)
