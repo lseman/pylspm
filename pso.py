@@ -16,6 +16,7 @@ import random
 
 from pylspm import PyLSpm
 from boot import PyLSboot
+from call_mpi import PyLSmpi
 
 
 class Particle(object):
@@ -41,7 +42,7 @@ def sigmoid(x, M):
     return M / (1 + np.exp(-x))
 
 
-def pso(npart, n_clusters, in_max, in_min, c1, c2, maxit,  data_,
+def pso(cores, npart, n_clusters, in_max, in_min, c1, c2, maxit,  data_,
         lvmodel, mvmodel, scheme, regression):
 
     swarm = PSOSwarmInit(npart, data_, n_clusters)
@@ -61,9 +62,11 @@ def pso(npart, n_clusters, in_max, in_min, c1, c2, maxit,  data_,
 
         inertia = (in_max - in_min) * ((maxit - i + 1) / maxit) + in_min
 
-        fit_ = PyLSboot(len(swarm), 8, data_, lvmodel,
-                        mvmodel, scheme, regression, 0, 100, nclusters=n_clusters, population=swarm)
-        fit = fit_.pso()
+        fit = PyLSmpi('pso', len(swarm), cores, data_, lvmodel,
+                      mvmodel, scheme, regression, 0, 100, nclusters=n_clusters, population=swarm)
+#        fit_ = PyLSboot(len(swarm), 8, data_, lvmodel,
+#                        mvmodel, scheme, regression, 0, 100, nclusters=n_clusters, population=swarm)
+#        fit = fit_.pso()
 
         if max(fit) > bestfit[1]:
             bestfit = [swarm[np.argmax(fit)], max(fit)]

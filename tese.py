@@ -25,6 +25,8 @@ from permuta import permuta
 from plsr2 import plsr2, HOCcat
 from monteCholesky import monteCholesky
 from adequacy import *
+from test_heuristic import *
+from fimix import fimixPLS
 
 if __name__ == '__main__':
     freeze_support()
@@ -45,8 +47,8 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    mode = 0
-    nrboot = 500
+    mode = 11
+    nrboot = 100
     cores = 8
     nrepic = 500
 
@@ -79,12 +81,14 @@ if __name__ == '__main__':
 #    data_ = (data_.loc[data_[segmento] == g1]).drop(segmento, axis=1)
 #    print(data_)
 
-#    data_, mvmodel = HOCcat(data_, mvmodel, seed=9002)
+#    data_, mvmodel = HOCcat(data_, mvmodel, seed=9003)
+
+#   test_heuristic(nrboot, cores, data_, lvmodel, mvmodel, scheme, regression, 0, 100)
 
     if (mode == 0):
 
         tese = PyLSpm(data_, lvmodel, mvmodel, scheme,
-                      regression, 0, 100, HOC='false', disattenuate='false', method=algorithm)
+                      regression, 0, 100, HOC='true', disattenuate='false', method=algorithm)
 
         if (diff == 'sample'):
             tese.sampleSize()
@@ -116,9 +120,14 @@ if __name__ == '__main__':
         imprime = PyLSpmHTML(tese)
         imprime.generate()
 
-        tese.impa()
+#        tese.impa()
 
         print(tese.path_matrix)
+
+    # FIMIX
+    elif (mode == 11):
+        n_clusters = 2
+        fimixPLS(n_clusters, data_, lvmodel, mvmodel, scheme, regression, 0, 100)
 
     # Monte Carlo with Cholesky
     elif (mode == 10):
@@ -137,51 +146,51 @@ if __name__ == '__main__':
 
     # Multigroup Analysis
     elif (mode == 3):
-#        mga(nrboot, cores, data_, lvmodel,
-#                mvmodel, scheme, regression, 0, 100, g1=0, g2=3)
+        #        mga(nrboot, cores, data_, lvmodel,
+        #                mvmodel, scheme, regression, 0, 100, g1=0, g2=3)
 
         comb = list(itertools.combinations(range(6), 2))
-        for k,j in comb:
-            print("Groups " + str(k+1) + '-' + str(j+1))
+        for k, j in comb:
+            print("Groups " + str(k + 1) + '-' + str(j + 1))
             mga(nrboot, cores, data_, lvmodel,
                 mvmodel, scheme, regression, 0, 100, g1=k, g2=j)
 
     # Permutation
     elif (mode == 4):
-#        permuta(nrboot, cores, data_, lvmodel,
-#                mvmodel, scheme, regression, 0, 100, g1=3, g2=4)
+        #        permuta(nrboot, cores, data_, lvmodel,
+        #                mvmodel, scheme, regression, 0, 100, g1=3, g2=4)
 
         comb = list(itertools.combinations(range(6), 2))
-        for k,j in comb:
-            print("Groups " + str(k+1) + '-' + str(j+1))
+        for k, j in comb:
+            print("Groups " + str(k + 1) + '-' + str(j + 1))
             permuta(nrboot, cores, data_, lvmodel,
                     mvmodel, scheme, regression, 0, 100, g1=k, g2=j)
 
     # GA
     elif (mode == 5):
         n_individuals = 10
-        n_clusters = 4
+        n_clusters = 3
         p_crossover = 0.85
 #        p_mutation = 1-((0.3)**(1.0/(1.0*len(data_))))
 #        print(p_mutation)
         p_mutation = 0.03
         iterations = 100
 
-        gac(n_individuals, n_clusters,
+        gac(cores, n_individuals, n_clusters,
             p_crossover, p_mutation, iterations,
             data_, lvmodel, mvmodel, scheme, regression)
 
     # PSO
     elif (mode == 6):
-        n_individuals = 5
+        n_individuals = 8
         n_clusters = 3
         in_max = 0.9
         in_min = 0.5
         c1 = 1.5
         c2 = 1.5
-        iterations = 100
+        iterations = 10
 
-        pso(n_individuals, n_clusters,
+        pso(cores, n_individuals, n_clusters,
             in_max, in_min, c1, c2, iterations,
             data_, lvmodel, mvmodel, scheme, regression)
 

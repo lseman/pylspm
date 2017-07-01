@@ -14,8 +14,6 @@ from collections import Counter
 from pca import *
 from pandas.plotting import scatter_matrix
 from adequacy import *
-import matplotlib.colors as colors
-import matplotlib.cm as mplcm
 
 
 class PyLSpm(object):
@@ -416,7 +414,7 @@ class PyLSpm(object):
         cor_ = pd.DataFrame.corr(self.fscores)**2
         AVE = self.comunalidades().apply(lambda column: column.sum() / (column != 0).sum())
         for i in range(len(cor_)):
-            cor_.ix[i,i] = AVE[i]
+            cor_.ix[i, i] = AVE[i]
 
         print(cor_)
 
@@ -570,7 +568,7 @@ class PyLSpm(object):
         ##################################################
 
     def __init__(self, dados, LVcsv, Mcsv, scheme='path', regression='ols', h=0, maximo=300,
-        stopCrit=7, HOC='false', disattenuate='false', method='lohmoller'):
+                 stopCrit=7, HOC='false', disattenuate='false', method='lohmoller'):
         self.data = dados
         self.LVcsv = LVcsv
         self.Mcsv = Mcsv
@@ -690,7 +688,7 @@ class PyLSpm(object):
 
                         predec = (path_matrix.ix[:, i] == 1)
                         if (sum(predec) > 0):
-                            
+
                             semi = fscores.ix[:, predec]
                             a_ = list(fscores.ix[:, i])
 
@@ -754,7 +752,7 @@ class PyLSpm(object):
                         Variables['latent'] == latent[i]]
                     myindex_ = latent[i]
                     outer_weights.ix[myindex.values,
-                                     myindex_] = res_ / np.std(res_) # New Mode A
+                                     myindex_] = res_ / np.std(res_)  # New Mode A
 
                 # Formativo / Modo B
                 elif(Variables['mode'][Variables['latent'] == latent[i]]).any() == "B":
@@ -777,7 +775,8 @@ class PyLSpm(object):
             if method == 'wold':
                 fscores = pd.DataFrame.dot(fscores, inner_paths)
 
-            diff_ = np.max(np.max((abs(last_outer_weights) - abs(outer_weights))**2))
+            diff_ = np.max(
+                np.max((abs(last_outer_weights) - abs(outer_weights))**2))
 
             if (diff_ < (10**(-(self.stopCriterion)))):
                 self.convergiu = 1
@@ -1025,11 +1024,12 @@ class PyLSpm(object):
             ncolors = len(unstandardizedManifestsIndEffects)
             fig = plt.figure()
             ax = fig.add_subplot(111)
-            ax.set_prop_cycle(plt.cycler('color', plt.cm.tab20c(np.linspace(0, 1, ncolors))))
+            ax.set_prop_cycle(plt.cycler(
+                'color', plt.cm.tab20c(np.linspace(0, 1, ncolors))))
             for j in range(len(performanceManifests)):
                 # if unstandardizedManifestsIndEffects.ix[j,i] != 0:
                 ax.plot(unstandardizedManifestsIndEffects.ix[
-                         j, i], performanceManifests[j], 'o', label=self.manifests[j])
+                    j, i], performanceManifests[j], 'o', label=self.manifests[j])
             ax.legend(loc='upper center', bbox_to_anchor=(0.5, -.12), ncol=6)
             plt.xlim(0)
             plt.ylim(0, 100)

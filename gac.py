@@ -115,7 +115,7 @@ def selectOne(pop, fit):
 '''
 
 
-def gac(npop, n_clusters, pcros, pmut, maxit, data_,
+def gac(cores, npop, n_clusters, pcros, pmut, maxit, data_,
         lvmodel, mvmodel, scheme, regression):
 
     pop = initPopulation(npop, data_, n_clusters)
@@ -126,9 +126,12 @@ def gac(npop, n_clusters, pcros, pmut, maxit, data_,
 #        fit = [indiv.fitness(data_, n_clusters, lvmodel, mvmodel, scheme,
 #                             regression) for indiv in pop]
 
-        fit_ = PyLSboot(len(pop), 8, data_, lvmodel,
-                        mvmodel, scheme, regression, 0, 100, nclusters=n_clusters, population=pop)
-        fit = fit_.gac()
+        fit = PyLSmpi('ga', len(pop), cores, data_, lvmodel,
+                      mvmodel, scheme, regression, 0, 100, nclusters=n_clusters, population=swarm)
+
+#        fit_ = PyLSboot(len(pop), 8, data_, lvmodel,
+#                        mvmodel, scheme, regression, 0, 100, nclusters=n_clusters, population=pop)
+#        fit = fit_.gac()
 
         new = []
         while len(new) < len(pop):

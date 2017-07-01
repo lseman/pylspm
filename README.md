@@ -1,12 +1,13 @@
 # PyPLS-PM
 
-**pylspm** is a [Python](http://www.python.org/) package dedicated to Partial Least Squares Path Modeling (PLS-PM) analisys using path scheme.
+**pylspm** is a [Python](http://www.python.org/) package dedicated to Partial Least Squares Path Modeling (PLS-PM) analisys.
 
 ## Dependencies
 
 * SciPy
 * Numpy
 * Pandas
+* Matplotlib
 
 ## Usage
 
@@ -16,6 +17,17 @@ plspm = PyLSpm(data, LVcsv, MVcsv, scheme, regression, maxit, stopCriterion)
 ```
 
 Where **data**, **LVcsv** and **MVcsv** are CSV files;
+
+**scheme** allows the following options:
+
+* path
+* centroid
+* factor
+
+**regression** allows the following options:
+
+* ols
+* fuzyy
 
 **maxit** (default = 300) is the maximum number of iterations allowed until convergence;
 

@@ -34,7 +34,7 @@ def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
         leaf_font_size=8,
     )
     plt.show()
-    max_d = 17.5
+    max_d = 18.5
     clusters = fcluster(Z, max_d, criterion='distance')
     print(clusters)
 
@@ -157,11 +157,10 @@ def rebus(residuals, data, dataRealoc, lvmodel, mvmodel, scheme, regression):
     print(1 / cost)
 
     # Automatiza multi-group
-'''
+
     allCombs = list(combinations(range(1, nk + 1), 2))
 
     for i in range(len(allCombs)):
         mga(50, 8, dataSplit, lvmodel,
             mvmodel, scheme, regression, 0, 100, g1=allCombs[i][0], g2=allCombs[i][1],
             segmento='Split')
-'''
