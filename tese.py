@@ -28,6 +28,8 @@ from adequacy import *
 from test_heuristic import *
 from fimix import fimixPLS
 
+from imputation import Imputer
+
 if __name__ == '__main__':
     freeze_support()
 
@@ -47,34 +49,35 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    mode = 11
+    mode = 0
     nrboot = 100
     cores = 8
     nrepic = 500
+    missForest = 1
 
     diff = 'none'
     method = 'percentile'
-    data = 'dados_missForest.csv'
+    data = 'dados_miss.csv'
     lvmodel = 'lvnew.csv'
     mvmodel = 'mvnew.csv'
     scheme = 'path'
     regression = 'ols'
     algorithm = 'wold'
+    boolen_stine = 1
 
     def isNaN(num):
         return num != num
 
     data_ = pd.read_csv(data)
 
-    # Mean replacement
-
-    """mean = pd.DataFrame.mean(data_)
-    for j in range(len(data_.columns)):
-        for i in range(len(data_)):
-            if (isNaN(data_.ix[i, j])):
-                data_.ix[i, j] = mean[j]"""
-
-#    data_ = data_.drop('SEM', axis=1)
+    if missForest == 1:
+    # randomForest Regression
+        np.random.seed(9002)
+        data_ = data_.drop('SEM', axis=1)
+        imputer = Imputer()
+        data_ = pd.DataFrame(imputer.fit(data_, cores).get(data_.copy()), columns=data_.columns)
+        data_.to_csv('imputedByMe.csv')
+        print(data_)
 
 #    g1 = 4
 #    segmento = 'SEM'
@@ -83,12 +86,12 @@ if __name__ == '__main__':
 
 #    data_, mvmodel = HOCcat(data_, mvmodel, seed=9003)
 
-#   test_heuristic(nrboot, cores, data_, lvmodel, mvmodel, scheme, regression, 0, 100)
+#    test_heuristic(nrboot, cores, data_, lvmodel, mvmodel, scheme, regression, 0, 100)
 
     if (mode == 0):
 
         tese = PyLSpm(data_, lvmodel, mvmodel, scheme,
-                      regression, 0, 100, HOC='true', disattenuate='false', method=algorithm)
+                      regression, 0, 100, HOC='false', disattenuate='false', method=algorithm)
 
         if (diff == 'sample'):
             tese.sampleSize()
@@ -117,12 +120,13 @@ if __name__ == '__main__':
             plt.clf()
             plt.cla()
 
-        imprime = PyLSpmHTML(tese)
-        imprime.generate()
+#        imprime = PyLSpmHTML(tese)
+#        imprime.generate()
 
 #        tese.impa()
 
         print(tese.path_matrix)
+#        print(tese.fornell())
 
     # FIMIX
     elif (mode == 11):
@@ -137,7 +141,7 @@ if __name__ == '__main__':
     # Bootstrap
     elif (mode == 1):
         bootstrap(nrboot, cores, data_, lvmodel,
-                  mvmodel, scheme, regression, 0, 100, method)
+                  mvmodel, scheme, regression, 0, 100, method, boolen_stine)
 
     # Blindfolding
     elif (mode == 2):
@@ -157,14 +161,14 @@ if __name__ == '__main__':
 
     # Permutation
     elif (mode == 4):
-        #        permuta(nrboot, cores, data_, lvmodel,
-        #                mvmodel, scheme, regression, 0, 100, g1=3, g2=4)
+        permuta(nrboot, cores, data_, lvmodel,
+            mvmodel, scheme, regression, 0, 100, g1=1, g2=4)
 
-        comb = list(itertools.combinations(range(6), 2))
-        for k, j in comb:
-            print("Groups " + str(k + 1) + '-' + str(j + 1))
-            permuta(nrboot, cores, data_, lvmodel,
-                    mvmodel, scheme, regression, 0, 100, g1=k, g2=j)
+#        comb = list(itertools.combinations(range(6), 2))
+#        for k, j in comb:
+#            print("Groups " + str(k + 1) + '-' + str(j + 1))
+#            permuta(nrboot, cores, data_, lvmodel,
+#                    mvmodel, scheme, regression, 0, 100, g1=k, g2=j)
 
     # GA
     elif (mode == 5):

@@ -156,7 +156,6 @@ class PyLSpm(object):
         corLVs = pd.DataFrame.cov(self.fscores)
         implied_ = pd.DataFrame.dot(self.outer_loadings, corLVs)
         implied = pd.DataFrame.dot(implied_, self.outer_loadings.T)
-
         implied.values[[np.arange(len(self.manifests))] * 2] = 1
         return implied
 
@@ -416,7 +415,7 @@ class PyLSpm(object):
         for i in range(len(cor_)):
             cor_.ix[i, i] = AVE[i]
 
-        print(cor_)
+        return(cor_)
 
     def rhoA(self):
         # rhoA

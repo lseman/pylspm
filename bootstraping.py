@@ -9,7 +9,25 @@ from pylspm import PyLSpm
 from boot import PyLSboot
 
 def bootstrap(nrboot, cores, data_, lvmodel,
-              mvmodel, scheme, regression, h='0', maxit='100', method='percentile'):
+              mvmodel, scheme, regression, h='0', maxit='100', method='percentile', boolen_stine=0):
+
+    if boolen_stine == 1:
+        segmento = 'SEM'
+        data_boolen = data_.drop(segmento, axis=1)
+
+        colunas = data_boolen.columns
+        S = pd.DataFrame.cov(data_boolen)
+        chol = np.linalg.cholesky(S)
+        A = (pd.DataFrame(np.linalg.inv(chol)))
+
+        boolen = PyLSpm(data_boolen, lvmodel, mvmodel, scheme, regression, 0, 100)
+        implied = np.sqrt(boolen.implied())
+
+        data_boolen = data_boolen - data_boolen.mean()
+        data_boolen = np.dot(np.dot(data_boolen, A), implied)
+
+        data_ = pd.DataFrame(data_boolen, columns=colunas)
+
     tese = PyLSboot(nrboot, cores, data_, lvmodel,
                     mvmodel, scheme, regression, 0, 100)
     resultados = tese.boot()
@@ -39,7 +57,7 @@ def bootstrap(nrboot, cores, data_, lvmodel,
 
             print('p-value')
             pvalue = np.round((scipy.stats.t.sf(
-                tstat, len(current_) - 1)),5)
+                tstat, len(current_) - 1)), 5)
             print(pvalue)
 
             return pvalue

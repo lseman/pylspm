@@ -15,7 +15,8 @@ class PyLSboot(object):
     def do_work(self, item):
         amostra = self.data.sample(
             len(self.data), replace=True, random_state=(np.random.RandomState()))
-        amostra.index = range(len(self.data))
+#        amostra.index = range(len(self.data))
+#        print(amostra)
         try:
             bootstraping = PyLSpm(amostra, self.LVcsv, self.Mcsv, self.scheme,
                                   self.reg, self.h, self.maximo, self.stopCriterion)

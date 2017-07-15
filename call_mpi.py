@@ -41,6 +41,8 @@ def PyLSmpi(mode, br, cores, dados, LVcsv, Mcsv, scheme='path', reg='ols', h=0, 
     for i in range(cores-1):
         nboot.append(br / cores)
 
+    myinfo = MPI.Info.Create()
+    myinfo.Set("hostfile", "machinefile")
     initcomm = MPI.COMM_SELF.Spawn(sys.executable, args=['run_mpi.py'], maxprocs=cores)
 
     for i in range(cores):

@@ -75,8 +75,12 @@ def otimiza(y, x, size, h, method='fuzzy', plotaIC='false'):
     model.optimize()
 #    print(awL)
 #    print(awR)
-    plota(x, y, ac, awL, awR, xname, yname, size)
+#    plota(x, y, ac, awL, awR, xname, yname, size)
 #    ic = IC(x, y, ac, awL, awR, size)
+
+#    print(yname)
+#    print(xname)
+#    print(ic)
 
     if plotaIC == 'false':
         return [ac[i] for i in range(size)], [(ac[i] - awL[i + 1].x) for i in range(size)], [(ac[i] + awR[i + 1].x) for i in range(size)]

@@ -13,17 +13,11 @@ from bootstraping import bootstrap
 
 class fimixPLS(object):
 
-    def prob(self, val, mu, sig, lam):
-        p = lam
-        for i in range(len(val)):
-            p *= norm.pdf(val[i], mu[i], sig[i][i])
-        return p
-
     def weighted_linear_regression(self, x, y, weights):
-        return np.linalg.pinv((weights[:, np.newaxis] * x).T.dot(x)).dot((weights[:, np.newaxis] * x).T.dot(y))
+        return np.linalg.inv((weights[:, np.newaxis] * x).T.dot(x)).dot((weights[:, np.newaxis] * x).T.dot(y))
 
     def weighted_regression_variance(self, x, y, weights, coefficients):
-        result = 0.
+        result = 0.0
         x = x.values
         y = y.values
         for i in range(len(y)):
@@ -165,8 +159,6 @@ class fimixPLS(object):
         prev_log_likelihood = 1
         cur_log_likelihood = 0
 
-        num_features = len(fscores.columns)
-
         # Random start
         assignment_weights = np.random.uniform(
             size=(len(fscores), self.num_components))
@@ -201,3 +193,14 @@ class fimixPLS(object):
                 fscores, coefficients, variances)
 
             iteration += 1
+
+        K = self.num_components
+        R = len(self.LVariables)
+        NK = (K - 1) + K*R + K*self.Q
+        AIC = -2 * (cur_log_likelihood) + 2 * NK
+        print('AIC')
+        print(AIC)
+
+        print('BIC')
+        BIC = -2 * (cur_log_likelihood) + np.log(len(dataSplit))*NK
+        print(BIC)
