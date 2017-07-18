@@ -49,21 +49,21 @@ if __name__ == '__main__':
 
     # Parâmetros
 
-    mode = 0
-    nrboot = 100
+    mode = 10
+    nrboot = 50
     cores = 8
-    nrepic = 500
-    missForest = 1
+    nrepic = 100
+    missForest = 0
 
     diff = 'none'
     method = 'percentile'
-    data = 'dados_miss.csv'
+    data = 'dados_missForest.csv'
     lvmodel = 'lvnew.csv'
     mvmodel = 'mvnew.csv'
     scheme = 'path'
     regression = 'ols'
     algorithm = 'wold'
-    boolen_stine = 1
+    boolen_stine = 0
 
     def isNaN(num):
         return num != num

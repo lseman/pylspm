@@ -1,8 +1,11 @@
+# BREIMAN, L. Random forests. Machine Learning, v. 45, n. 1, p. 5–32, 2001.
+
 # Adapted from https://github.com/kevin-keraudren/randomforest-python
 
 import numpy as np
 from multiprocessing import Pool, freeze_support
 from numpy.random import uniform, random_integers
+
 
 class RegressionTree(object):
 

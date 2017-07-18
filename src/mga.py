@@ -1,3 +1,8 @@
+# SARSTEDT, M.; HENSELER, J.; RINGLE, C. M. Multigroup Analysis in Partial
+# Least Squares (PLS) Path Modeling: Alternative Methods and Empirical
+# Results. In: Measurement and Research Methods in International Marketing
+# (Advances in International Marketing). [s.l: s.n.]. v. 22p. 195–218.
+
 import pandas
 import numpy as np
 from numpy import inf
@@ -8,6 +13,7 @@ from scipy.stats import norm
 from pylspm import PyLSpm
 from boot import PyLSboot
 from itertools import combinations
+
 
 def trataGroups(objeto):
 
@@ -20,6 +26,7 @@ def trataGroups(objeto):
         deviation_ = np.round(np.std(current_, axis=0, ddof=1), 4)
 
     return [mean_, deviation_]
+
 
 def mga(nrboot, cores, data_, lvmodel,
         mvmodel, scheme, regression, h='0', maxit='100', g1=0, g2=1, segmento='SEM', method='non-parametric'):

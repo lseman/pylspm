@@ -1,3 +1,7 @@
+# STEKHOVEN, D. J.; BUHLMANN, P. MissForest--non-parametric missing value
+# imputation for mixed-type data. Bioinformatics, v. 28, n. 1, p. 112–118,
+# 1 jan. 2012.
+
 # Adapted from https://github.com/log0ymxm/predictive_imputer
 
 from numpy import inf
@@ -5,6 +9,7 @@ import pandas as pd
 import numpy as np
 from regForest import *
 import pandas as pd
+
 
 class Imputer(object):
 
@@ -48,7 +53,6 @@ class Imputer(object):
         for iter in range(self.max_iter):
             print('Iteraration ' + str(iter + 1))
             for i in most_by_nan:
-                print(i)
                 X_s = np.delete(new_imputed, i, 1)
                 y_nan = X_nan[:, i]
 
@@ -59,11 +63,6 @@ class Imputer(object):
                 estimator_ = self.estimators_[i]
                 X_train = X_train
                 y_train = y_train
-
-                #print('x trainn')
-                #print(X_train)
-                #print('y train')
-                #print(y_train)
 
                 estimator_.fit(X_train, y_train)
 
@@ -81,8 +80,6 @@ class Imputer(object):
             old_estimators = self.estimators_.copy()
             old_imputed = new_imputed.copy()
             old_gamma = gamma.copy()
-
-#        print(new_imputed)
 
         return self
 

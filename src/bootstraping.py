@@ -1,3 +1,5 @@
+# EFRON, B.; TIBSHIRANI, R. J. An Introduction to the Bootstrap. 1993.
+
 import pandas
 import numpy as np
 from numpy import inf
@@ -7,6 +9,7 @@ from scipy.stats import norm
 
 from pylspm import PyLSpm
 from boot import PyLSboot
+
 
 def bootstrap(nrboot, cores, data_, lvmodel,
               mvmodel, scheme, regression, h='0', maxit='100', method='percentile', boolen_stine=0):
@@ -20,7 +23,8 @@ def bootstrap(nrboot, cores, data_, lvmodel,
         chol = np.linalg.cholesky(S)
         A = (pd.DataFrame(np.linalg.inv(chol)))
 
-        boolen = PyLSpm(data_boolen, lvmodel, mvmodel, scheme, regression, 0, 100)
+        boolen = PyLSpm(data_boolen, lvmodel, mvmodel,
+                        scheme, regression, 0, 100)
         implied = np.sqrt(boolen.implied())
 
         data_boolen = data_boolen - data_boolen.mean()
@@ -42,7 +46,10 @@ def bootstrap(nrboot, cores, data_, lvmodel,
         for i in range(len(current[0])):
             current_ = [j[i] for j in current]
             print('MEAN')
-            print(np.round(np.mean(current_, axis=0), 4))
+
+            mean_ = (np.round(np.mean(current_, axis=0), 4))
+            print(mean_)
+
             print('STD')
             print(np.round(np.std(current_, axis=0, ddof=1), 4))
             print('CI 2.5')
@@ -60,7 +67,7 @@ def bootstrap(nrboot, cores, data_, lvmodel,
                 tstat, len(current_) - 1)), 5)
             print(pvalue)
 
-            return pvalue
+            return pvalue, mean_
 
     elif (method == 'bca'):
 

@@ -1,7 +1,8 @@
 # PLS-PM tabu search clustering
 # Author: Laio Oriel Seman
 
-# BROWNLEE, J. Clever Algorithms. [s.l: s.n.].
+# Brownlee, J. (2011). Clever Algorithms. Retrieved from
+# http://www.cleveralgorithms.com
 
 from random import randint, uniform
 from copy import deepcopy

@@ -1,3 +1,7 @@
+# CHIN, W. W. How to Write Up and Report PLS Analyses. In: Handbook of
+# Partial Least Squares. Berlin, Heidelberg: Springer Berlin Heidelberg,
+# 2010. p. 655–690.
+
 import pandas
 import numpy as np
 from numpy import inf
@@ -6,14 +10,16 @@ import pandas as pd
 from pylspm import PyLSpm
 from boot import PyLSboot
 
+
 def isNaN(num):
     return num != num
+
 
 def blindfolding(data_, lvmodel, mvmodel, scheme,
                  regression, h='0', maxit='100', HOC='true'):
 
     model = PyLSpm(data_, lvmodel, mvmodel, scheme,
-                  regression, h, maxit, HOC=HOC)
+                   regression, h, maxit, HOC=HOC)
     data2_ = model.data
     # observation/distance must not be interger
     distance = 7

@@ -1,4 +1,12 @@
-# FIMIX-PLS
+# HAHN, C. et al. Capturing Customer Heterogeneity Using a Finite Mixture
+# PLS Approach. Schmalenbach Business Review, v. 54, n. July, p. 243–269,
+# 2002.
+
+# SARSTEDT, M. et al. Uncovering and Treating Unobserved Heterogeneity
+# with FIMIX-PLS: Which Model Selection Criterion Provides an Appropriate
+# Number of Segments? Schmalenbach Business Review, v. 63, n. 1, p. 34–62,
+# 2011.
+
 import pandas
 import numpy as np
 from numpy import inf
@@ -196,11 +204,11 @@ class fimixPLS(object):
 
         K = self.num_components
         R = len(self.LVariables)
-        NK = (K - 1) + K*R + K*self.Q
+        NK = (K - 1) + K * R + K * self.Q
         AIC = -2 * (cur_log_likelihood) + 2 * NK
         print('AIC')
         print(AIC)
 
         print('BIC')
-        BIC = -2 * (cur_log_likelihood) + np.log(len(dataSplit))*NK
+        BIC = -2 * (cur_log_likelihood) + np.log(len(dataSplit)) * NK
         print(BIC)

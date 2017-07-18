@@ -98,7 +98,7 @@ def permuta(nrboot, cores, data_, lvmodel,
     print(pval[0][0])'''
 
     print('test Compositional Invariance')
-    print(np.round(c, 4)<estimado[2][0])
+    print(np.round(c, 4) < estimado[2][0])
 
 #    print('Equality of Composite Mean Values and Variance')
 #    print(estimado[0][1]>estimado[4][1])
