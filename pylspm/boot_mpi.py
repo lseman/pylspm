@@ -9,10 +9,10 @@ import sys
 
 import pandas as pd
 import numpy as np
-from pylspm import PyLSpm
+from .pylspm import PyLSpm
 import random
 from scipy.stats.stats import pearsonr
-from boot import PyLSboot
+from .boot import PyLSboot
 
 
 def do_work(data, LVcsv, Mcsv, scheme, reg, h, maximo):

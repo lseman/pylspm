@@ -7,10 +7,10 @@ size = comm.Get_size()
 
 import pandas as pd
 import numpy as np
-from pylspm import PyLSpm
+from .pylspm import PyLSpm
 import random
 from scipy.stats.stats import pearsonr
-from boot import PyLSboot
+from .boot import PyLSboot
 
 
 def PyLSmpi(mode, br, cores, dados, LVcsv, Mcsv, scheme='path', reg='ols', h=0, maximo=300, stopCrit=7, nclusters=2, population=None):

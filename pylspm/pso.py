@@ -14,9 +14,9 @@ from numpy import inf
 import pandas as pd
 import random
 
-from pylspm import PyLSpm
-from boot import PyLSboot
-from call_mpi import PyLSmpi
+from .pylspm import PyLSpm
+from .boot import PyLSboot
+from .call_mpi import PyLSmpi
 
 
 class Particle(object):

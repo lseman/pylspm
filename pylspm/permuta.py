@@ -9,8 +9,8 @@ import pandas as pd
 import scipy.stats
 from scipy.stats import norm
 
-from pylspm import PyLSpm
-from boot import PyLSboot
+from .pylspm import PyLSpm
+from .boot import PyLSboot
 from itertools import combinations
 import itertools
 import random

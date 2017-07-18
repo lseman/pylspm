@@ -14,9 +14,9 @@ import pandas as pd
 import scipy.stats
 from scipy.stats import norm
 
-from pylspm import PyLSpm
-from boot import PyLSboot
-from bootstraping import bootstrap
+from .pylspm import PyLSpm
+from .boot import PyLSboot
+from .bootstraping import bootstrap
 
 
 class fimixPLS(object):

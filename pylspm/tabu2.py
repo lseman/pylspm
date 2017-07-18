@@ -11,8 +11,8 @@ from numpy import inf
 import pandas as pd
 import random
 
-from pylspm import PyLSpm
-from boot import PyLSboot
+from .pylspm import PyLSpm
+from .boot import PyLSboot
 
 
 def stochasticTwoOpt(perm):

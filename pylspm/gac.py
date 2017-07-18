@@ -15,8 +15,8 @@ import sys
 import pandas as pd
 import random
 
-from pylspm import PyLSpm
-from boot import PyLSboot
+from .pylspm import PyLSpm
+from .boot import PyLSboot
 
 sys.setrecursionlimit(1500)
 

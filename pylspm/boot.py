@@ -5,7 +5,7 @@
 from multiprocessing import Pool, freeze_support
 import pandas as pd
 import numpy as np
-from pylspm import PyLSpm
+from .pylspm import PyLSpm
 import random
 from scipy.stats.stats import pearsonr
 

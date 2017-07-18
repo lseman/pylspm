@@ -7,7 +7,7 @@
 from numpy import inf
 import pandas as pd
 import numpy as np
-from regForest import *
+from .regForest import *
 import pandas as pd
 
 

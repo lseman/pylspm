@@ -14,10 +14,9 @@ from matplotlib import pyplot as plt
 from scipy.cluster.hierarchy import dendrogram, linkage, ward, distance
 from scipy.cluster.hierarchy import fcluster
 
-from pylspm import PyLSpm
-from results import PyLSpmHTML
-from boot import PyLSboot
-from mga import mga
+from .pylspm import PyLSpm
+from .boot import PyLSboot
+from .mga import mga
 from itertools import combinations
 
 

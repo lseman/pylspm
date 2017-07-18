@@ -8,12 +8,12 @@ import pandas as pd
 import numpy as np
 import scipy as sp
 import scipy.stats
-from qpLRlib4 import otimiza, plotaIC
+from .qpLRlib4 import otimiza, plotaIC
 import scipy.linalg
 from collections import Counter
-from pca import *
+from .pca import *
 from pandas.plotting import scatter_matrix
-from adequacy import *
+from .adequacy import *
 
 
 class PyLSpm(object):

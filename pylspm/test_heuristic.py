@@ -2,12 +2,12 @@ import numpy as np
 from numpy import inf
 import pandas as pd
 import scipy.stats
-from pylspm import PyLSpm
-from results import PyLSpmHTML
-from boot import PyLSboot
+from .pylspm import PyLSpm
+from .results import PyLSpmHTML
+from .boot import PyLSboot
 from itertools import combinations
-from mga import mga
-from permuta import permuta
+from .mga import mga
+from .permuta import permuta
 
 
 def test_heuristic(nrboot, cores, data_, lvmodel, mvmodel, scheme, regression, h='0', maxit='100'):
