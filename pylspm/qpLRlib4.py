@@ -50,7 +50,7 @@ def otimiza(y, x, size, h, method='fuzzy', plotaIC='false'):
     y = y.values
     x = x.values
 
-    model.setObjective(quicksum((np.dot(x[:, j], x[:, j].transpose())
+    model.setObjective(quicksum((float(np.dot(x[:, j], x[:, j].transpose()))
                                  * (awL[j + 1] + awR[j + 1]) * (awL[j + 1] + awR[j + 1]))
                                 for j in range(size))
                        + (awL[0] + awR[0]) * (awL[0] + awR[0]),

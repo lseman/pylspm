@@ -32,9 +32,9 @@ if __name__ == '__main__':
     # Parâmetros
 
     mode = 0
-    nrboot = 100
+    nrboot = 500
     cores = 8
-    nrepic = 200
+    nrepic = 500
     missForest = 0
 
     diff = 'none'
@@ -102,8 +102,8 @@ if __name__ == '__main__':
             plt.clf()
             plt.cla()
 
-#        imprime = PyLSpmHTML(tese)
-#        imprime.generate()
+        imprime = PyLSpmHTML(tese)
+        imprime.generate()
 
 #        tese.impa()
 
