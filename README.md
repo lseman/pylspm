@@ -1,6 +1,6 @@
 # PyPLS-PM
 
-**pylspm** is a [Python](http://www.python.org/) package dedicated to Partial Least Squares Path Modeling (PLS-PM) analisys.
+**pylspm** is a [Python](http://www.python.org/) package dedicated to Partial Least Squares Path Modeling (PLS-PM) analysis.
 
 ## Dependencies
 
@@ -8,13 +8,13 @@
 * Numpy
 * Pandas
 * Matplotlib
-* Gubori (for fuzzy regression)
+* Gurobi (for fuzzy regression)
 
 ## Usage
 
 ```python
 # Instantiating the PyPLS class
-plspm = PyLSpm(data, LVcsv, MVcsv, scheme, regression, maxit, stopCriterion)
+plspm = PyLSpm(data, LVcsv, MVcsv, scheme, regression, h, maxit, stopCriterion)
 ```
 
 Where **data**, **LVcsv** and **MVcsv** are CSV files;
@@ -28,16 +28,13 @@ Where **data**, **LVcsv** and **MVcsv** are CSV files;
 **regression** allows the following options:
 
 * ols
-* fuzyy
+* fuzzy
 
 **h** is the h-certain factor used for fuzzy regression only;
 
 **maxit** (default = 300) is the maximum number of iterations allowed until convergence;
 
 and **stopCriterion** (default = 10^-7) is the desired error.
-
-* The available schemes are: centroid, factor, path and fuzzy.
-* The available regressions are OLS and fuzzy.
 
 ### Data file
 
