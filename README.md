@@ -99,7 +99,7 @@ PLS-GAS | x | | | gac.py
 PLS-CPSO | x | | | pso.py
 PLS-TABU | x | | | tabu2.py
 FIMIX-PLS | x | | | fimix.py
-Blidfolding | | x | | blidfolding.py
+Blindfolding | | x | | blidfolding.py
 KMO | | x | | adequacy.py
 BTS | | x | | adequacy.py
 PCA | | x | | pca.py
