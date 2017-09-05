@@ -124,6 +124,6 @@ Library inspired by Juan Manuel Velasquez Estrada's simplePLS, Gaston Sanchez's 
 7. JARBOUI, B. et al. Combinatorial particle swarm optimization (CPSO) for partitional clustering problem. Applied Mathematics and Computation, v. 192, n. 2, p. 337–345, set. 2007.
 8. RINGLE, C. M. et al. PLS path modeling and evolutionary segmentation. Journal of Business Research, v. 66, n. 9, p. 1318–1324, set. 2013.
 9. SARSTEDT, M. et al. Uncovering and Treating Unobserved Heterogeneity with FIMIX-PLS: Which Model Selection Criterion Provides an Appropriate Number of Segments? Schmalenbach Business Review, v. 63, n. 1, p. 34–62, 2011.
-10. SARSTEDT, M.; HENSELER, J.; RINGLE, C. M. Multigroup Analysis in Partial Least Squares (PLS) Path Modeling: Alternative Methods and Empirical Results. In: 11. Measurement and Research Methods in International Marketing (Advances in International Marketing). [s.l: s.n.]. v. 22p. 195–218.
-12. STEKHOVEN, D. J.; BUHLMANN, P. MissForest--non-parametric missing value imputation for mixed-type data. Bioinformatics, v. 28, n. 1, p. 112–118, 1 jan. 2012.
-13. TRINCHERA, L. Unobserved Heterogeneity in Structural Equation Models: A New Approach to Latent Class Detection in PLS Path Modeling. Tese (Doutorado): Università degli Studi di Napoli Federico II, 2007.
+10. SARSTEDT, M.; HENSELER, J.; RINGLE, C. M. Multigroup Analysis in Partial Least Squares (PLS) Path Modeling: Alternative Methods and Empirical Results. In: Measurement and Research Methods in International Marketing (Advances in International Marketing). [s.l: s.n.]. v. 22p. 195–218.
+11. STEKHOVEN, D. J.; BUHLMANN, P. MissForest--non-parametric missing value imputation for mixed-type data. Bioinformatics, v. 28, n. 1, p. 112–118, 1 jan. 2012.
+12. TRINCHERA, L. Unobserved Heterogeneity in Structural Equation Models: A New Approach to Latent Class Detection in PLS Path Modeling. Tese (Doutorado): Università degli Studi di Napoli Federico II, 2007.
